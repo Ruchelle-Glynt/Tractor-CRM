@@ -69,23 +69,20 @@ const PLACEHOLDER_PASSWORD = "ChangeMe123!"; // every admin should reset this on
 
 async function main() {
   console.log("Seeding Category taxonomy...");
+  const categoryRows: { mainCategory: string; subcategory: string | null }[] = [];
   for (const [mainCategory, subcategories] of Object.entries(CATEGORY_TAXONOMY)) {
     if (subcategories.length === 0) {
-      await prisma.category.upsert({
-        where: { mainCategory_subcategory: { mainCategory, subcategory: null } },
-        update: {},
-        create: { mainCategory, subcategory: null },
-      });
+      categoryRows.push({ mainCategory, subcategory: null });
     } else {
       for (const subcategory of subcategories) {
-        await prisma.category.upsert({
-          where: { mainCategory_subcategory: { mainCategory, subcategory } },
-          update: {},
-          create: { mainCategory, subcategory },
-        });
+        categoryRows.push({ mainCategory, subcategory });
       }
     }
   }
+  await prisma.category.createMany({
+    data: categoryRows,
+    skipDuplicates: true,
+  });
 
   console.log("Seeding initial Admin users...");
   const passwordHash = await bcrypt.hash(PLACEHOLDER_PASSWORD, 10);
