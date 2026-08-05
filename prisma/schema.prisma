@@ -1,0 +1,379 @@
+// Tractor Outdoor CRM — database schema
+// Generated from CRM-Spec.md Section 4. Every model below maps to a section
+// there — see the spec for the "why" behind each field.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum AccountType {
+  CLIENT
+  AGENCY
+}
+
+enum AccountTier {
+  TIER_1
+  TIER_2
+  TIER_3
+}
+
+enum FiscalYearStart {
+  JAN_DEC // January - December
+  MAR_FEB // March - February
+  JUN_MAY // June - May
+}
+
+enum DecisionRole {
+  DECISION_MAKER
+  INFLUENCER
+  ADMINISTRATIVE
+}
+
+enum ActivityType {
+  GIFT
+  EVENT
+  CAMPAIGN_DRIVE
+  CALL
+  MEETING
+  OTHER
+}
+
+enum DealType {
+  NON_TRADE
+  SPEND_COMMITMENT_DISCOUNT
+  VALUE_TRADE
+  MIXED_CASH_AND_TRADE
+  PURE_TRADE
+}
+
+enum ManagedBy {
+  MARKETING
+  SALES
+  FINANCE
+}
+
+enum ContractStatus {
+  ACTIVE
+  EXPIRED
+  PENDING
+  RENEWED
+}
+
+enum RofrStatus {
+  PENDING
+  CONFIRMED
+  LAPSED
+}
+
+enum ChannelType {
+  CLASSIC
+  DIGITAL
+  PROGRAMMATIC
+}
+
+enum LeadSource {
+  WEBSITE
+  SOCIAL
+  TELEPHONIC
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  LOST
+}
+
+enum TriggerType {
+  BIRTHDAY
+  FISCAL_YEAR
+  CONTRACT_RENEWAL // reserved for later - see spec Section 5.3
+}
+
+enum TriggerStage {
+  MONTHLY_DIGEST
+  TWO_WEEK_REMINDER
+  TWO_DAY_REMINDER
+  DAY_OF_INTERNAL
+  DAY_OF_CLIENT
+}
+
+enum TriggerStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum UserRole {
+  ADMIN
+  SALES
+  MARKETING
+}
+
+// ---------------------------------------------------------------------------
+// 4.1 Category - fixed, seeded taxonomy (see prisma/seed.ts)
+// ---------------------------------------------------------------------------
+
+model Category {
+  id           String  @id @default(uuid())
+  mainCategory String
+  subcategory  String?
+
+  accountsByMainCategory Account[]         @relation("AccountMainCategory")
+  accountsBySubcategory  Account[]         @relation("AccountSubCategory")
+  marketBenchmarks       MarketBenchmark[]
+
+  @@unique([mainCategory, subcategory])
+}
+
+// ---------------------------------------------------------------------------
+// 4.2 Account - Priority 1, 3, 5. A client or an agency.
+// ---------------------------------------------------------------------------
+
+model Account {
+  id     String      @id @default(uuid())
+  name   String
+  type   AccountType
+  tier   AccountTier
+
+  // Priority 5 - agency-to-client mapping (self-relation)
+  parentAgencyId String?
+  parentAgency   Account?  @relation("AgencyClients", fields: [parentAgencyId], references: [id])
+  clients        Account[] @relation("AgencyClients")
+
+  categoryId    String
+  category      Category  @relation("AccountMainCategory", fields: [categoryId], references: [id])
+  subcategoryId String?
+  subcategory   Category? @relation("AccountSubCategory", fields: [subcategoryId], references: [id])
+
+  fiscalYearStart FiscalYearStart
+
+  // Priority 1 - main contact, shown as name + designation wherever the account appears
+  mainContactId String?  @unique
+  mainContact   Contact? @relation("AccountMainContact", fields: [mainContactId], references: [id])
+
+  salesExecutiveId String
+  salesExecutive   User   @relation("SalesExecutiveAccounts", fields: [salesExecutiveId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  // Full team roster (Priority 1) - every Contact linked to this account
+  contacts         Contact[]             @relation("AccountContacts")
+  activities       Activity[]
+  contracts        Contract[]
+  growthMetrics    AccountGrowthMetric[]
+  marketBenchmarks MarketBenchmark[]
+  leads            Lead[]
+}
+
+// ---------------------------------------------------------------------------
+// 4.3 Contact - Priority 1, 2. An individual person at an Account.
+// ---------------------------------------------------------------------------
+
+model Contact {
+  id        String  @id @default(uuid())
+  accountId String
+  account   Account @relation("AccountContacts", fields: [accountId], references: [id], onDelete: Cascade)
+
+  firstName String
+  lastName  String
+  title        String? // role/designation - shown alongside name as main contact
+  decisionRole DecisionRole? // how much sway this person has, separate from job title
+  email     String?
+  phone     String?
+
+  birthday         DateTime? // drives automated triggers, Priority 10
+  interests        String[]
+  familyPetNotes   String? // kids, pets ("dog parent," etc.) - one free-form field
+  personalityNotes String? // "who they are as people"
+  giftPreferences  String?
+  giftRestrictions String?
+
+  createdAt DateTime @default(now())
+
+  // reverse of Account.mainContactId - a contact can be the main contact for at most one account
+  mainContactOf Account? @relation("AccountMainContact")
+
+  activities  Activity[]
+  triggerLogs TriggerLog[]
+}
+
+// ---------------------------------------------------------------------------
+// 4.4 Activity - Priority 6. Marketing & sales activity log per client.
+// ---------------------------------------------------------------------------
+
+model Activity {
+  id        String  @id @default(uuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id])
+
+  type         ActivityType
+  description  String?
+  activityDate DateTime
+  ownerId      String
+  owner        User     @relation("ActivityOwner", fields: [ownerId], references: [id])
+  value        Decimal?
+
+  // DOOHclick Sales Report import (spec Section 5.3) - Order Id, so re-imports
+  // update instead of duplicating this row.
+  externalReferenceId String? @unique
+
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// 4.4a Contract - trade and non-trade deals alike; entered manually (5.3).
+// "Renewal" always means end_date being reached, regardless of deal_type.
+// ---------------------------------------------------------------------------
+
+model Contract {
+  id        String  @id @default(uuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  dealType    DealType
+  description String?
+
+  cashValue                Decimal?
+  tradeValue               Decimal?
+  tradeValueType           String? // what the trade is *for*, e.g. "Airline tickets"
+  spendCommitmentThreshold Decimal? // for SPEND_COMMITMENT_DISCOUNT deals
+  discountRate             Decimal? // percentage, for SPEND_COMMITMENT_DISCOUNT deals
+  managedBy                ManagedBy // pure-trade deals typically sit fully with Marketing
+
+  startDate DateTime
+  endDate   DateTime // the contract term - what the renewal trigger keys off
+  status    ContractStatus @default(ACTIVE)
+
+  // First right of refusal (e.g. iconic sites) - client must actively confirm
+  // renewal or lose it. Tracked separately from the general renewal reminder.
+  hasFirstRightOfRefusal   Boolean     @default(false)
+  rofrConfirmationDeadline DateTime? // typically endDate minus 3 months
+  clientConfirmedRenewalAt DateTime?
+  rofrStatus               RofrStatus?
+
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// 4.5 AccountGrowthMetric - Priority 7. channelType left blank in Phase 1
+// (see spec Section 4.5) until Classic/Digital/Programmatic can be split.
+// ---------------------------------------------------------------------------
+
+model AccountGrowthMetric {
+  id        String   @id @default(uuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  period      DateTime // month or quarter
+  channelType ChannelType?
+  spendAmount Decimal
+  holdingSize Decimal? // leave blank for PROGRAMMATIC (pDOOH) - doesn't apply there
+
+  createdAt DateTime @default(now())
+
+  @@unique([accountId, period, channelType])
+}
+
+// ---------------------------------------------------------------------------
+// 4.6 MarketBenchmark - Priority 8. External audit data (e.g. Outdoor Audit
+// report), captured at a point in time - typically Feb and Aug each year.
+// ---------------------------------------------------------------------------
+
+model MarketBenchmark {
+  id        String   @id @default(uuid())
+  accountId String? // null when the row is category/brand-level only
+  account   Account? @relation(fields: [accountId], references: [id])
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  brand      String?
+
+  captureDate           DateTime
+  estimatedMonthlySpend Decimal?
+  holdingSizeExternal   Decimal? // for comparison against AccountGrowthMetric.holdingSize
+  sourceName            String? // e.g. "Outdoor Audit report"
+
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// 4.7 Lead - Priority 9. Inbound leads only - no deal stages.
+// ---------------------------------------------------------------------------
+
+model Lead {
+  id           String     @id @default(uuid())
+  source       LeadSource
+  contactName  String
+  contactEmail String?
+  contactPhone String?
+  companyName  String?
+
+  linkedAccountId String? // set once matched to an existing account
+  linkedAccount   Account? @relation(fields: [linkedAccountId], references: [id])
+
+  status         LeadStatus @default(NEW)
+  convertedValue Decimal? // set when status = CONVERTED
+
+  transferredToUserId String
+  transferredToUser   User   @relation("LeadTransferredTo", fields: [transferredToUserId], references: [id])
+
+  createdAt   DateTime  @default(now())
+  convertedAt DateTime?
+}
+
+// ---------------------------------------------------------------------------
+// 4.8 TriggerLog - Priority 10. One row per scheduled send. See spec Section 5.
+// ---------------------------------------------------------------------------
+
+model TriggerLog {
+  id           String       @id @default(uuid())
+  triggerType  TriggerType
+  triggerStage TriggerStage
+  contactId    String
+  contact      Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  scheduledFor DateTime
+  status       TriggerStatus @default(PENDING)
+  sentAt       DateTime?
+
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// 4.9 User - system users. Roles simplified per spec Section 6:
+// Admin (all control), Sales, Marketing.
+//
+// passwordHash is not in the spec's field list - it's added here because
+// NextAuth's Credentials provider (see lib/auth.ts, built later) checks
+// email + password directly against this table, with no third-party auth
+// vendor involved.
+// ---------------------------------------------------------------------------
+
+model User {
+  id                  String   @id @default(uuid())
+  name                String
+  email               String   @unique
+  passwordHash        String
+  role                UserRole
+  emailSenderOverride String? // future per-salesperson sender address (spec 5.4)
+
+  createdAt DateTime @default(now())
+
+  salesAccounts    Account[]  @relation("SalesExecutiveAccounts")
+  activities       Activity[] @relation("ActivityOwner")
+  leadsTransferred Lead[]     @relation("LeadTransferredTo")
+}
