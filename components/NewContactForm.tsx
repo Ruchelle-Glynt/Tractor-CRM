@@ -1,23 +1,17 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
 type Option = { id: string; label: string };
-
 export default function NewContactForm({ accounts }: { accounts: Option[] }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-
     const form = new FormData(e.currentTarget);
     const interestsRaw = (form.get("interests") as string) ?? "";
-
     const payload = {
       accountId: form.get("accountId"),
       firstName: form.get("firstName"),
@@ -36,13 +30,11 @@ export default function NewContactForm({ accounts }: { accounts: Option[] }) {
       giftPreferences: form.get("giftPreferences") || null,
       giftRestrictions: form.get("giftRestrictions") || null,
     };
-
     const res = await fetch("/api/contacts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-
     setSubmitting(false);
     if (!res.ok) {
       const body = await res.json();
@@ -52,20 +44,32 @@ export default function NewContactForm({ accounts }: { accounts: Option[] }) {
     const created = await res.json();
     router.push(`/contacts/${created.id}`);
   }
-
   return (
     <form onSubmit={handleSubmit} className="mt-6 max-w-xl space-y-4">
       <div>
         <label className="block text-sm font-medium">Account</label>
-        <select name="accountId" required className="mt-1 w-full rounded border border-gray-300 px-3 py-2">
+        <select
+          name="accountId"
+          required
+          defaultValue=""
+          onChange={(e) => {
+            if (e.target.value === "__ADD_NEW__") {
+              router.push("/accounts/new");
+            }
+          }}
+          className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+        >
+          <option value="" disabled>
+            Select an account
+          </option>
           {accounts.map((a) => (
             <option key={a.id} value={a.id}>
               {a.label}
             </option>
           ))}
+          <option value="__ADD_NEW__">+ Add new account</option>
         </select>
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium">First name</label>
@@ -76,7 +80,6 @@ export default function NewContactForm({ accounts }: { accounts: Option[] }) {
           <input name="lastName" required className="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
         </div>
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium">Title / designation</label>
@@ -92,7 +95,6 @@ export default function NewContactForm({ accounts }: { accounts: Option[] }) {
           </select>
         </div>
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium">Email</label>
@@ -103,27 +105,22 @@ export default function NewContactForm({ accounts }: { accounts: Option[] }) {
           <input name="phone" className="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
         </div>
       </div>
-
       <div>
         <label className="block text-sm font-medium">Birthday</label>
         <input name="birthday" type="date" className="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
       </div>
-
       <div>
         <label className="block text-sm font-medium">Interests (comma-separated)</label>
         <input name="interests" placeholder="golf, wine, hiking" className="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
       </div>
-
       <div>
         <label className="block text-sm font-medium">Family & pet notes</label>
         <textarea name="familyPetNotes" className="mt-1 w-full rounded border border-gray-300 px-3 py-2" rows={2} />
       </div>
-
       <div>
         <label className="block text-sm font-medium">Who they are as people</label>
         <textarea name="personalityNotes" className="mt-1 w-full rounded border border-gray-300 px-3 py-2" rows={2} />
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium">Gift preferences</label>
@@ -134,9 +131,7 @@ export default function NewContactForm({ accounts }: { accounts: Option[] }) {
           <input name="giftRestrictions" className="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
         </div>
       </div>
-
       {error && <p className="text-sm text-red-600">{error}</p>}
-
       <button
         type="submit"
         disabled={submitting}

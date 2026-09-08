@@ -1,10 +1,7 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
 type Option = { id: string; label: string };
-
 export default function NewAccountForm({
   categories,
   users,
@@ -17,25 +14,20 @@ export default function NewAccountForm({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
   // Only top-level rows (subcategory === null) populate the Main Category
   // dropdown; subcategories for the chosen main category populate the second.
   const mainCategories = Array.from(new Set(categories.map((c) => c.mainCategory)));
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-
     const form = new FormData(e.currentTarget);
     const mainCategory = form.get("mainCategory") as string;
     const subcategoryName = form.get("subcategory") as string;
-
     const categoryRow = categories.find((c) => c.mainCategory === mainCategory && c.subcategory === null);
     const subcategoryRow = categories.find(
       (c) => c.mainCategory === mainCategory && c.subcategory === subcategoryName
     );
-
     const payload = {
       name: form.get("name"),
       type: form.get("type"),
@@ -46,13 +38,11 @@ export default function NewAccountForm({
       categoryId: categoryRow?.id ?? subcategoryRow?.id,
       subcategoryId: subcategoryRow?.id ?? null,
     };
-
     const res = await fetch("/api/accounts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-
     setSubmitting(false);
     if (!res.ok) {
       const body = await res.json();
@@ -62,14 +52,12 @@ export default function NewAccountForm({
     const created = await res.json();
     router.push(`/accounts/${created.id}`);
   }
-
   return (
     <form onSubmit={handleSubmit} className="mt-6 max-w-xl space-y-4">
       <div>
         <label className="block text-sm font-medium">Name</label>
         <input name="name" required className="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium">Type</label>
@@ -87,11 +75,10 @@ export default function NewAccountForm({
           </select>
         </div>
       </div>
-
       <div>
-        <label className="block text-sm font-medium">Parent agency (optional)</label>
+        <label className="block text-sm font-medium">Agency (optional)</label>
         <select name="parentAgencyId" className="mt-1 w-full rounded border border-gray-300 px-3 py-2">
-          <option value="">None - direct account</option>
+          <option value="">Direct Client</option>
           {agencies.map((a) => (
             <option key={a.id} value={a.id}>
               {a.label}
@@ -99,7 +86,6 @@ export default function NewAccountForm({
           ))}
         </select>
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium">Main category</label>
@@ -121,16 +107,16 @@ export default function NewAccountForm({
           />
         </div>
       </div>
-
       <div>
         <label className="block text-sm font-medium">Fiscal year</label>
         <select name="fiscalYearStart" required className="mt-1 w-full rounded border border-gray-300 px-3 py-2">
           <option value="JAN_DEC">January - December</option>
           <option value="MAR_FEB">March - February</option>
           <option value="JUN_MAY">June - May</option>
+          <option value="MULTIPLE">Multiple Client Fiscals</option>
+          <option value="TO_BE_ASSIGNED">To Be Assigned</option>
         </select>
       </div>
-
       <div>
         <label className="block text-sm font-medium">Sales executive</label>
         <select name="salesExecutiveId" required className="mt-1 w-full rounded border border-gray-300 px-3 py-2">
@@ -141,7 +127,6 @@ export default function NewAccountForm({
           ))}
         </select>
       </div>
-
       <datalist id="subcategory-options">
         {categories
           .filter((c) => c.subcategory !== null)
@@ -149,9 +134,7 @@ export default function NewAccountForm({
             <option key={c.id} value={c.subcategory ?? undefined} />
           ))}
       </datalist>
-
       {error && <p className="text-sm text-red-600">{error}</p>}
-
       <button
         type="submit"
         disabled={submitting}

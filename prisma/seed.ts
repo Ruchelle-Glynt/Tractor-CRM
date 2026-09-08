@@ -1,5 +1,5 @@
 // Seeds the fixed Category taxonomy (spec Section 4.1) and the initial Admin
-// users (spec Section 4.9) for the Tractor Outdoor instance.
+// and Sales users (spec Section 4.9) for the Tractor Outdoor instance.
 //
 // Run with: npm run prisma:seed
 // (this also runs automatically after `prisma migrate dev` the first time)
@@ -65,7 +65,23 @@ const INITIAL_ADMINS = [
   { name: "Bernice", email: "bernice@tractoroutdoor.com" },
   { name: "Seymone", email: "seymone@tractoroutdoor.com" },
 ];
-const PLACEHOLDER_PASSWORD = "ChangeMe123!"; // every admin should reset this on first login
+
+// Tractor Outdoor's sales team. Same placeholder-password approach as
+// Admins - each person should reset theirs on first login.
+const INITIAL_SALES = [
+  { name: "Laurence Nyoni", email: "laurence@tractoroutdoor.com" },
+  { name: "Molly Tshirangwana", email: "molly@tractoroutdoor.com" },
+  { name: "Steve Duck", email: "steve@tractoroutdoor.com" },
+  { name: "Cara Woods", email: "cara@tractoroutdoor.com" },
+  { name: "Joshua King", email: "joshua@tractoroutdoor.com" },
+  { name: "Ronald Tselane", email: "ronald@tractoroutdoor.com" },
+  { name: "Tessa McGillivray", email: "tessa@tractoroutdoor.com" },
+  { name: "Angelique Masters", email: "ang@tractoroutdoor.com" },
+  { name: "Wian van Jaarsveld", email: "wian@tractoroutdoor.com" },
+  { name: "Jodi Simons", email: "jodi@tractoroutdoor.com" },
+];
+
+const PLACEHOLDER_PASSWORD = "ChangeMe123!"; // every user should reset this on first login
 
 async function main() {
   console.log("Seeding Category taxonomy...");
@@ -84,8 +100,9 @@ async function main() {
     skipDuplicates: true,
   });
 
-  console.log("Seeding initial Admin users...");
   const passwordHash = await bcrypt.hash(PLACEHOLDER_PASSWORD, 10);
+
+  console.log("Seeding initial Admin users...");
   for (const admin of INITIAL_ADMINS) {
     await prisma.user.upsert({
       where: { email: admin.email },
@@ -99,8 +116,22 @@ async function main() {
     });
   }
 
-  console.log("Done. Placeholder admin password is:", PLACEHOLDER_PASSWORD);
-  console.log("Change every admin's email/password before real use.");
+  console.log("Seeding Sales team users...");
+  for (const sales of INITIAL_SALES) {
+    await prisma.user.upsert({
+      where: { email: sales.email },
+      update: {},
+      create: {
+        name: sales.name,
+        email: sales.email,
+        passwordHash,
+        role: UserRole.SALES,
+      },
+    });
+  }
+
+  console.log("Done. Placeholder password for all seeded users is:", PLACEHOLDER_PASSWORD);
+  console.log("Change every user's email/password before real use.");
 }
 
 main()
