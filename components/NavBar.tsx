@@ -1,5 +1,4 @@
 import Link from "next/link";
-
 // Server component - just the shared top nav. Sign-out is a plain link to
 // NextAuth's built-in /api/auth/signout page rather than a client component,
 // to keep this file simple; swap in a proper button once the UI is styled.
@@ -13,6 +12,9 @@ export default function NavBar() {
         <nav className="flex gap-6 text-sm text-white">
           <Link href="/accounts">Accounts</Link>
           <Link href="/contacts">Contacts</Link>
+          <Link href="/contracts">Contracts</Link>
+          <Link href="/leads">Leads</Link>
+          <Link href="/settings">Settings</Link>
           <Link href="/api/auth/signout">Sign out</Link>
         </nav>
       </div>
