@@ -1,27 +1,23 @@
 "use client";
-
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     const result = await signIn("credentials", {
       email,
       password,
       redirect: false,
     });
-
     setLoading(false);
     if (result?.error) {
       setError("Incorrect email or password.");
@@ -30,10 +26,12 @@ export default function LoginPage() {
     router.push("/");
     router.refresh();
   }
-
   return (
     <div className="mx-auto mt-24 max-w-sm">
-      <h1 className="text-xl font-bold text-navy">Sign in</h1>
+      <div className="mb-8 flex justify-center">
+        <Image src="/logo-black.jpg" alt="Tractor Outdoor" width={190} height={39} priority />
+      </div>
+      <h1 className="text-center text-xl font-bold text-navy">Sign in</h1>
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <label className="block text-sm font-medium">Email</label>
@@ -59,7 +57,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded bg-navy px-4 py-2 font-medium text-white disabled:opacity-50"
+          className="w-full rounded bg-navy px-4 py-2 font-medium text-white transition hover:bg-gray-800 disabled:opacity-50"
         >
           {loading ? "Signing in..." : "Sign in"}
         </button>
