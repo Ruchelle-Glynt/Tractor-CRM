@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import NewContactForm from "@/components/NewContactForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewContactPage() {
   const accounts = await prisma.account.findMany({ orderBy: { name: "asc" } });
 

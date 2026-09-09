@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import EditContactForm from "@/components/EditContactForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function EditContactPage({ params }: { params: { id: string } }) {
   const [contact, accounts] = await Promise.all([
     prisma.contact.findUnique({ where: { id: params.id } }),

@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import EditAccountForm from "@/components/EditAccountForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function EditAccountPage({ params }: { params: { id: string } }) {
   const [account, categories, salesUsers, agencies] = await Promise.all([
     prisma.account.findUnique({

@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import NewAccountForm from "@/components/NewAccountForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewAccountPage() {
   const [categories, salesUsers, agencies] = await Promise.all([
     prisma.category.findMany({ orderBy: [{ mainCategory: "asc" }, { subcategory: "asc" }] }),

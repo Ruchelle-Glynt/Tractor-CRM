@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
+// Always fetch fresh from the database - this page has no dynamic API calls
+// of its own, so Next.js would otherwise treat it as static and cache it at
+// build time, meaning edits (e.g. changing an account's type) wouldn't show
+// up here until the next deploy.
+export const dynamic = "force-dynamic";
+
 // Server component - reads straight from Prisma rather than calling our own
 // API route, since this runs on the server anyway.
 export default async function AccountsListPage() {
   const accounts = await prisma.account.findMany({
-    include: { category: true, mainContact: true },
+    include: { mainContact: true },
     orderBy: { name: "asc" },
   });
 
@@ -24,7 +30,6 @@ export default async function AccountsListPage() {
             <th className="py-2">Name</th>
             <th className="py-2">Type</th>
             <th className="py-2">Tier</th>
-            <th className="py-2">Category</th>
             <th className="py-2">Main contact</th>
           </tr>
         </thead>
@@ -38,7 +43,6 @@ export default async function AccountsListPage() {
               </td>
               <td className="py-3">{account.type}</td>
               <td className="py-3">{account.tier.replaceAll("_", " ")}</td>
-              <td className="py-3">{account.type === "AGENCY" ? "N/A" : account.category?.mainCategory ?? "-"}</td>
               <td className="py-3">
                 {account.mainContact ? `${account.mainContact.firstName} ${account.mainContact.lastName}` : "-"}
               </td>
@@ -46,7 +50,7 @@ export default async function AccountsListPage() {
           ))}
           {accounts.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-6 text-center text-gray-400">
+              <td colSpan={4} className="py-6 text-center text-gray-400">
                 No accounts yet.
               </td>
             </tr>

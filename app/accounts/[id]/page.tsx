@@ -2,6 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
+// See app/accounts/page.tsx for why this is needed - without it Next.js may
+// statically cache this page and hide edits until the next deploy.
+export const dynamic = "force-dynamic";
+
 export default async function AccountDetailPage({ params }: { params: { id: string } }) {
   const account = await prisma.account.findUnique({
     where: { id: params.id },
@@ -11,7 +15,7 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
       salesExecutive: true,
       mainContact: true,
       parentAgency: true,
-      clients: true,
+      clients: { include: { category: true } },
       contacts: { orderBy: { firstName: "asc" } },
       contracts: { orderBy: { endDate: "asc" } },
       growthMetrics: { orderBy: { period: "desc" }, take: 12 },
@@ -19,6 +23,13 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
   });
 
   if (!account) notFound();
+
+  // Agencies don't carry a single category themselves - they can span many
+  // industries depending on which clients they manage. Roll those up here
+  // instead of showing a placeholder like "N/A".
+  const clientIndustries = Array.from(
+    new Set(account.clients.map((c) => c.category?.mainCategory).filter((v): v is string => Boolean(v)))
+  );
 
   return (
     <div>
@@ -33,6 +44,9 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
                 }`
               : ""}
           </p>
+          {account.type === "AGENCY" && clientIndustries.length > 0 && (
+            <p className="mt-1 text-sm text-gray-500">Industries across managed clients: {clientIndustries.join(", ")}</p>
+          )}
         </div>
         <div className="flex gap-2">
           <Link href={`/accounts/${account.id}/edit`} className="rounded border border-navy px-4 py-2 text-sm text-navy">
@@ -102,10 +116,11 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
           <h2 className="text-lg font-semibold text-navy">Linked clients</h2>
           <ul className="mt-3 divide-y divide-gray-100 rounded border border-gray-200 bg-white">
             {account.clients.map((client) => (
-              <li key={client.id} className="px-4 py-3">
+              <li key={client.id} className="flex items-center justify-between px-4 py-3">
                 <Link href={`/accounts/${client.id}`} className="text-navy hover:underline">
                   {client.name}
                 </Link>
+                <span className="text-sm text-gray-500">{client.category?.mainCategory ?? ""}</span>
               </li>
             ))}
           </ul>
