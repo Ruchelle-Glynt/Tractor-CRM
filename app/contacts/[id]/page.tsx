@@ -12,15 +12,22 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-navy">
-        {contact.firstName} {contact.lastName}
-      </h1>
-      <p className="text-sm text-gray-500">
-        {contact.title ?? "No title set"} ·{" "}
-        <Link href={`/accounts/${contact.account.id}`} className="text-navy hover:underline">
-          {contact.account.name}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-navy">
+            {contact.firstName} {contact.lastName}
+          </h1>
+          <p className="text-sm text-gray-500">
+            {contact.title ?? "No title set"} ·{" "}
+            <Link href={`/accounts/${contact.account.id}`} className="text-navy hover:underline">
+              {contact.account.name}
+            </Link>
+          </p>
+        </div>
+        <Link href={`/contacts/${contact.id}/edit`} className="rounded border border-navy px-4 py-2 text-sm text-navy">
+          Edit contact
         </Link>
-      </p>
+      </div>
 
       <dl className="mt-6 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
         <div>

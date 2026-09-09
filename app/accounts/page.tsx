@@ -37,8 +37,8 @@ export default async function AccountsListPage() {
                 </Link>
               </td>
               <td className="py-3">{account.type}</td>
-              <td className="py-3">{account.tier.replace("_", " ")}</td>
-              <td className="py-3">{account.category?.mainCategory ?? "-"}</td>
+              <td className="py-3">{account.tier.replaceAll("_", " ")}</td>
+              <td className="py-3">{account.type === "AGENCY" ? "N/A" : account.category?.mainCategory ?? "-"}</td>
               <td className="py-3">
                 {account.mainContact ? `${account.mainContact.firstName} ${account.mainContact.lastName}` : "-"}
               </td>

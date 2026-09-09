@@ -22,7 +22,9 @@ export async function POST(request: Request) {
 
   const body = await request.json();
 
-  const required = ["name", "type", "tier", "categoryId", "fiscalYearStart", "salesExecutiveId"];
+  // Category is optional in the database - it only applies to Client/brand
+  // accounts, never Agencies - so it is deliberately left out of this list.
+  const required = ["name", "type", "tier", "fiscalYearStart", "salesExecutiveId"];
   for (const field of required) {
     if (!body[field]) {
       return NextResponse.json({ error: `Missing required field: ${field}` }, { status: 400 });
@@ -34,8 +36,9 @@ export async function POST(request: Request) {
       name: body.name,
       type: body.type,
       tier: body.tier,
-      categoryId: body.categoryId,
-      subcategoryId: body.subcategoryId || null,
+      // Agencies never carry a category - only the client/brand accounts they manage do.
+      categoryId: body.type === "AGENCY" ? null : body.categoryId || null,
+      subcategoryId: body.type === "AGENCY" ? null : body.subcategoryId || null,
       fiscalYearStart: body.fiscalYearStart,
       salesExecutiveId: body.salesExecutiveId,
       parentAgencyId: body.parentAgencyId || null,

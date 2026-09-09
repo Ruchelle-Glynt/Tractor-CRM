@@ -27,13 +27,20 @@ export async function GET(_request: Request, { params }: { params: { id: string 
   return NextResponse.json(account);
 }
 
-// PATCH /api/accounts/:id - partial update (e.g. setting mainContactId once a
-// contact exists, per spec Section 4.2)
+// PATCH /api/accounts/:id - partial update (edit screen, and setting
+// mainContactId once a contact exists, per spec Section 4.2)
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
+
+  // Agencies never carry a category - enforce this on every update, not just
+  // on create, so flipping a Client to an Agency clears any stale category.
+  if (body.type === "AGENCY") {
+    body.categoryId = null;
+    body.subcategoryId = null;
+  }
 
   const account = await prisma.account.update({
     where: { id: params.id },

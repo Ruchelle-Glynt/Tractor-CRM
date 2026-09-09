@@ -26,14 +26,22 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
         <div>
           <h1 className="text-2xl font-bold text-navy">{account.name}</h1>
           <p className="text-sm text-gray-500">
-            {account.type} · {account.tier.replace("_", " ")} ·{" "}
-            {account.category?.mainCategory}
-            {account.subcategory ? ` / ${account.subcategory.subcategory}` : ""}
+            {account.type} · {account.tier.replaceAll("_", " ")}
+            {account.type === "CLIENT" && account.category
+              ? ` · ${account.category.mainCategory}${
+                  account.subcategory ? ` / ${account.subcategory.subcategory}` : ""
+                }`
+              : ""}
           </p>
         </div>
-        <Link href="/contacts/new" className="rounded bg-navy px-4 py-2 text-sm text-white">
-          + Add contact
-        </Link>
+        <div className="flex gap-2">
+          <Link href={`/accounts/${account.id}/edit`} className="rounded border border-navy px-4 py-2 text-sm text-navy">
+            Edit account
+          </Link>
+          <Link href="/contacts/new" className="rounded bg-navy px-4 py-2 text-sm text-white">
+            + Add contact
+          </Link>
+        </div>
       </div>
 
       <dl className="mt-6 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
@@ -43,7 +51,7 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
         </div>
         <div>
           <dt className="text-gray-500">Fiscal year</dt>
-          <dd className="font-medium">{account.fiscalYearStart.replace("_", "-")}</dd>
+          <dd className="font-medium">{account.fiscalYearStart.replaceAll("_", "-")}</dd>
         </div>
         <div>
           <dt className="text-gray-500">Main contact</dt>

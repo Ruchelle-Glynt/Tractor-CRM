@@ -2,11 +2,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 type Option = { id: string; label: string };
-export default function NewAccountForm({
+type AccountData = {
+  id: string;
+  name: string;
+  type: string;
+  tier: string;
+  fiscalYearStart: string;
+  salesExecutiveId: string;
+  parentAgencyId: string | null;
+  category: { mainCategory: string } | null;
+  subcategory: { subcategory: string | null } | null;
+};
+export default function EditAccountForm({
+  account,
   categories,
   users,
   agencies,
 }: {
+  account: AccountData;
   categories: { id: string; mainCategory: string; subcategory: string | null }[];
   users: Option[];
   agencies: Option[];
@@ -14,9 +27,7 @@ export default function NewAccountForm({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [type, setType] = useState("CLIENT");
-  // Only top-level rows (subcategory === null) populate the Main Category
-  // dropdown; subcategories for the chosen main category populate the second.
+  const [type, setType] = useState(account.type);
   const mainCategories = Array.from(new Set(categories.map((c) => c.mainCategory)));
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -29,8 +40,6 @@ export default function NewAccountForm({
     const subcategoryRow = categories.find(
       (c) => c.mainCategory === mainCategory && c.subcategory === subcategoryName
     );
-    // Categories only apply to Client/brand accounts - Agencies never get one,
-    // even if a stale value is sitting in the (hidden) form fields.
     const payload = {
       name: form.get("name"),
       type: form.get("type"),
@@ -41,8 +50,8 @@ export default function NewAccountForm({
       categoryId: type === "AGENCY" ? null : categoryRow?.id ?? subcategoryRow?.id ?? null,
       subcategoryId: type === "AGENCY" ? null : subcategoryRow?.id ?? null,
     };
-    const res = await fetch("/api/accounts", {
-      method: "POST",
+    const res = await fetch(`/api/accounts/${account.id}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
@@ -52,14 +61,19 @@ export default function NewAccountForm({
       setError(body.error ?? "Something went wrong.");
       return;
     }
-    const created = await res.json();
-    router.push(`/accounts/${created.id}`);
+    router.push(`/accounts/${account.id}`);
+    router.refresh();
   }
   return (
     <form onSubmit={handleSubmit} className="mt-6 max-w-xl space-y-4">
       <div>
         <label className="block text-sm font-medium">Name</label>
-        <input name="name" required className="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
+        <input
+          name="name"
+          required
+          defaultValue={account.name}
+          className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+        />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -77,7 +91,12 @@ export default function NewAccountForm({
         </div>
         <div>
           <label className="block text-sm font-medium">Tier</label>
-          <select name="tier" required defaultValue="TO_BE_ASSIGNED" className="mt-1 w-full rounded border border-gray-300 px-3 py-2">
+          <select
+            name="tier"
+            required
+            defaultValue={account.tier}
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+          >
             <option value="TO_BE_ASSIGNED">To Be Assigned</option>
             <option value="TIER_1">Tier 1</option>
             <option value="TIER_2">Tier 2</option>
@@ -87,7 +106,11 @@ export default function NewAccountForm({
       </div>
       <div>
         <label className="block text-sm font-medium">Agency (optional)</label>
-        <select name="parentAgencyId" className="mt-1 w-full rounded border border-gray-300 px-3 py-2">
+        <select
+          name="parentAgencyId"
+          defaultValue={account.parentAgencyId ?? ""}
+          className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+        >
           <option value="">Direct Client</option>
           {agencies.map((a) => (
             <option key={a.id} value={a.id}>
@@ -100,7 +123,15 @@ export default function NewAccountForm({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium">Main category</label>
-            <select name="mainCategory" required className="mt-1 w-full rounded border border-gray-300 px-3 py-2">
+            <select
+              name="mainCategory"
+              required
+              defaultValue={account.category?.mainCategory ?? ""}
+              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+            >
+              <option value="" disabled>
+                Select a category
+              </option>
               {mainCategories.map((mc) => (
                 <option key={mc} value={mc}>
                   {mc}
@@ -113,6 +144,7 @@ export default function NewAccountForm({
             <input
               name="subcategory"
               list="subcategory-options"
+              defaultValue={account.subcategory?.subcategory ?? ""}
               className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
               placeholder="Leave blank if none"
             />
@@ -126,7 +158,12 @@ export default function NewAccountForm({
       )}
       <div>
         <label className="block text-sm font-medium">Fiscal year</label>
-        <select name="fiscalYearStart" required defaultValue="TO_BE_ASSIGNED" className="mt-1 w-full rounded border border-gray-300 px-3 py-2">
+        <select
+          name="fiscalYearStart"
+          required
+          defaultValue={account.fiscalYearStart}
+          className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+        >
           <option value="TO_BE_ASSIGNED">To Be Assigned</option>
           <option value="JAN_DEC">January - December</option>
           <option value="MAR_FEB">March - February</option>
@@ -136,7 +173,12 @@ export default function NewAccountForm({
       </div>
       <div>
         <label className="block text-sm font-medium">Sales executive</label>
-        <select name="salesExecutiveId" required className="mt-1 w-full rounded border border-gray-300 px-3 py-2">
+        <select
+          name="salesExecutiveId"
+          required
+          defaultValue={account.salesExecutiveId}
+          className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+        >
           {users.map((u) => (
             <option key={u.id} value={u.id}>
               {u.label}
@@ -157,7 +199,7 @@ export default function NewAccountForm({
         disabled={submitting}
         className="rounded bg-navy px-4 py-2 text-white disabled:opacity-50"
       >
-        {submitting ? "Saving..." : "Create account"}
+        {submitting ? "Saving..." : "Save changes"}
       </button>
     </form>
   );
