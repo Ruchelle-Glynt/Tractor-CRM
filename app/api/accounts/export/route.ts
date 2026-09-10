@@ -31,7 +31,7 @@ export async function GET() {
     "Subcategory",
     "Fiscal Year",
     "Sales Executive",
-    "Agency",
+    "Media Agency",
     "Main Contact",
     "Created",
   ];

@@ -105,7 +105,7 @@ export default function EditAccountForm({
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium">Agency (optional)</label>
+        <label className="block text-sm font-medium">Media Agency (optional)</label>
         <select
           name="parentAgencyId"
           defaultValue={account.parentAgencyId ?? ""}

@@ -86,7 +86,7 @@ export default function NewAccountForm({
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium">Agency (optional)</label>
+        <label className="block text-sm font-medium">Media Agency (optional)</label>
         <select name="parentAgencyId" className="mt-1 w-full rounded border border-gray-300 px-3 py-2">
           <option value="">Direct Client</option>
           {agencies.map((a) => (

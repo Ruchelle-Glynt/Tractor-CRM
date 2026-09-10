@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { Avatar } from "@/components/Badge";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,11 @@ export default async function ContactsListPage() {
           {contacts.map((contact) => (
             <tr key={contact.id} className="border-b border-gray-100 hover:bg-white">
               <td className="py-3">
-                <Link href={`/contacts/${contact.id}`} className="font-medium text-navy hover:underline">
+                <Link
+                  href={`/contacts/${contact.id}`}
+                  className="flex items-center gap-3 font-medium text-navy hover:underline"
+                >
+                  <Avatar name={`${contact.firstName} ${contact.lastName}`} />
                   {contact.firstName} {contact.lastName}
                 </Link>
               </td>

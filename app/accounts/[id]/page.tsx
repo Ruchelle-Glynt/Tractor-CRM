@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { TypeBadge, TierBadge } from "@/components/Badge";
 
 // See app/accounts/page.tsx for why this is needed - without it Next.js may
 // statically cache this page and hide edits until the next deploy.
@@ -35,11 +36,14 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-navy">{account.name}</h1>
-          <p className="text-sm text-gray-500">
-            {account.type} · {account.tier.replaceAll("_", " ")}
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-navy">{account.name}</h1>
+            <TypeBadge type={account.type} />
+            <TierBadge tier={account.tier} />
+          </div>
+          <p className="mt-1 text-sm text-gray-500">
             {account.type === "CLIENT" && account.category
-              ? ` · ${account.category.mainCategory}${
+              ? `${account.category.mainCategory}${
                   account.subcategory ? ` / ${account.subcategory.subcategory}` : ""
                 }`
               : ""}
@@ -78,7 +82,7 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
           </dd>
         </div>
         <div>
-          <dt className="text-gray-500">Parent agency</dt>
+          <dt className="text-gray-500">Media agency</dt>
           <dd className="font-medium">
             {account.parentAgency ? (
               <Link href={`/accounts/${account.parentAgency.id}`} className="text-navy hover:underline">
@@ -110,7 +114,7 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
         )}
       </section>
 
-      {/* Agency's linked direct clients, if this account is an agency */}
+      {/* Media agency's linked direct clients, if this account is an agency */}
       {account.clients.length > 0 && (
         <section className="mt-10">
           <h2 className="text-lg font-semibold text-navy">Linked clients</h2>

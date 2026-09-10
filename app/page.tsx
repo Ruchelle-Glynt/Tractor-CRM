@@ -20,18 +20,12 @@ export default async function DashboardPage() {
           className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:border-teal"
         >
           <h2 className="text-lg font-semibold">Accounts</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Clients and agencies - tiering, team rosters, contracts, growth.
-          </p>
         </Link>
         <Link
           href="/contacts"
           className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:border-teal"
         >
           <h2 className="text-lg font-semibold">Contacts</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Personal and relationship profiles for every client contact.
-          </p>
         </Link>
       </div>
     </div>

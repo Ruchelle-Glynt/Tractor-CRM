@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { Avatar, TypeBadge, TierBadge } from "@/components/Badge";
 
 // Always fetch fresh from the database - this page has no dynamic API calls
 // of its own, so Next.js would otherwise treat it as static and cache it at
@@ -11,7 +12,6 @@ export const dynamic = "force-dynamic";
 // API route, since this runs on the server anyway.
 export default async function AccountsListPage() {
   const accounts = await prisma.account.findMany({
-    include: { mainContact: true },
     orderBy: { name: "asc" },
   });
 
@@ -38,27 +38,28 @@ export default async function AccountsListPage() {
             <th className="py-2">Name</th>
             <th className="py-2">Type</th>
             <th className="py-2">Tier</th>
-            <th className="py-2">Main contact</th>
           </tr>
         </thead>
         <tbody>
           {accounts.map((account) => (
             <tr key={account.id} className="border-b border-gray-100 hover:bg-white">
               <td className="py-3">
-                <Link href={`/accounts/${account.id}`} className="font-medium text-navy hover:underline">
+                <Link href={`/accounts/${account.id}`} className="flex items-center gap-3 font-medium text-navy hover:underline">
+                  <Avatar name={account.name} />
                   {account.name}
                 </Link>
               </td>
-              <td className="py-3">{account.type}</td>
-              <td className="py-3">{account.tier.replaceAll("_", " ")}</td>
               <td className="py-3">
-                {account.mainContact ? `${account.mainContact.firstName} ${account.mainContact.lastName}` : "-"}
+                <TypeBadge type={account.type} />
+              </td>
+              <td className="py-3">
+                <TierBadge tier={account.tier} />
               </td>
             </tr>
           ))}
           {accounts.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-6 text-center text-gray-400">
+              <td colSpan={3} className="py-6 text-center text-gray-400">
                 No accounts yet.
               </td>
             </tr>
