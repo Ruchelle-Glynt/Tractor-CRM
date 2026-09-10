@@ -19,9 +19,17 @@ export default async function AccountsListPage() {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-navy">Accounts</h1>
-        <Link href="/accounts/new" className="rounded bg-navy px-4 py-2 text-sm text-white">
-          + New account
-        </Link>
+        <div className="flex gap-2">
+          <a
+            href="/api/accounts/export"
+            className="rounded border border-navy px-4 py-2 text-sm text-navy"
+          >
+            Download CSV
+          </a>
+          <Link href="/accounts/new" className="rounded bg-navy px-4 py-2 text-sm text-white">
+            + New account
+          </Link>
+        </div>
       </div>
 
       <table className="mt-6 w-full text-left text-sm">
