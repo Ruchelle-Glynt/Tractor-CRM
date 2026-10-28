@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import NewLeadForm from "@/components/NewLeadForm";
 
+// Always load fresh from the database - otherwise Next.js caches this page
+// at deploy time and new leads/accounts don't show until the next deploy.
+export const dynamic = "force-dynamic";
+
 export default async function NewLeadPage() {
   const [users, accounts] = await Promise.all([
     prisma.user.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),

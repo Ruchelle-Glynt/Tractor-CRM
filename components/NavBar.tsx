@@ -10,6 +10,7 @@ export default function NavBar() {
         <nav className="flex gap-6 text-sm font-medium text-white">
           <Link href="/accounts" className="hover:text-yellow">Accounts</Link>
           <Link href="/contacts" className="hover:text-yellow">Contacts</Link>
+          <Link href="/activities" className="hover:text-yellow">Activity</Link>
           <Link href="/leads" className="hover:text-yellow">Leads</Link>
           <Link href="/settings" className="hover:text-yellow">Settings</Link>
           <Link href="/api/auth/signout" className="hover:text-yellow">Sign out</Link>

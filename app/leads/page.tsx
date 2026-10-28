@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
+// Always load fresh from the database - otherwise Next.js caches this page
+// at deploy time and new leads/accounts don't show until the next deploy.
+export const dynamic = "force-dynamic";
+
 export default async function LeadsPage() {
   const leads = await prisma.lead.findMany({
     include: {

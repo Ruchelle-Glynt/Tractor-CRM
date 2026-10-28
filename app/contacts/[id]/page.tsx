@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { activityLabel } from "@/lib/activity";
 
 export const dynamic = "force-dynamic";
 
 export default async function ContactDetailPage({ params }: { params: { id: string } }) {
   const contact = await prisma.contact.findUnique({
     where: { id: params.id },
-    include: { account: true, activities: { orderBy: { activityDate: "desc" } } },
+    include: { account: true, activities: { include: { owner: { select: { name: true } } }, orderBy: { activityDate: "desc" } } },
   });
 
   if (!contact) notFound();
@@ -80,9 +81,12 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
           <ul className="mt-3 divide-y divide-gray-100 rounded border border-gray-200 bg-white">
             {contact.activities.map((activity) => (
               <li key={activity.id} className="px-4 py-3 text-sm">
-                <span className="font-medium">{activity.type.replaceAll("_", " ")}</span> —{" "}
-                {activity.description ?? "no description"} (
-                {new Date(activity.activityDate).toLocaleDateString()})
+                <span className="font-medium">{activityLabel(activity.type)}</span>
+                {activity.description ? ` — ${activity.description}` : ""}
+                <span className="block text-xs text-gray-400">
+                  {new Date(activity.activityDate).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}{" "}
+                  · {activity.owner.name}
+                </span>
               </li>
             ))}
           </ul>

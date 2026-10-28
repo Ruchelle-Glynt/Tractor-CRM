@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { TypeBadge, TierBadge } from "@/components/Badge";
+import AccountActivities from "@/components/AccountActivities";
 
 // See app/accounts/page.tsx for why this is needed - without it Next.js may
 // statically cache this page and hide edits until the next deploy.
@@ -19,11 +22,34 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
       clients: { include: { category: true } },
       contacts: { orderBy: { firstName: "asc" } },
       contracts: { orderBy: { endDate: "asc" } },
+      activities: {
+        include: {
+          owner: { select: { name: true } },
+          contact: { select: { id: true, firstName: true, lastName: true } },
+        },
+        orderBy: { activityDate: "desc" },
+      },
       growthMetrics: { orderBy: { period: "desc" }, take: 12 },
     },
   });
 
   if (!account) notFound();
+
+  const session = await getServerSession(authOptions);
+  const currentUser = session?.user as { id?: string; role?: string } | undefined;
+
+  // Prisma returns money as Decimal objects, which can't be handed to a
+  // client component - convert to plain numbers and date strings first.
+  const activities = account.activities.map((a) => ({
+    id: a.id,
+    type: a.type,
+    description: a.description,
+    activityDate: a.activityDate.toISOString(),
+    value: a.value === null ? null : Number(a.value),
+    ownerId: a.ownerId,
+    owner: a.owner,
+    contact: a.contact,
+  }));
 
   // Agencies don't carry a single category themselves - they can span many
   // industries depending on which clients they manage. Roll those up here
@@ -113,6 +139,15 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
           </ul>
         )}
       </section>
+
+      {/* Activity log (Priority 6) - gifts, events, calls, meetings */}
+      <AccountActivities
+        accountId={account.id}
+        contacts={account.contacts.map((c) => ({ id: c.id, firstName: c.firstName, lastName: c.lastName }))}
+        initialActivities={activities}
+        currentUserId={currentUser?.id ?? ""}
+        isAdmin={currentUser?.role === "ADMIN"}
+      />
 
       {/* Media agency's linked direct clients, if this account is an agency */}
       {account.clients.length > 0 && (
