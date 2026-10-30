@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import EditAccountForm from "@/components/EditAccountForm";
+import NoPermission from "@/components/NoPermission";
+import { getCurrentUser, canEditAccount } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,7 @@ export default async function EditAccountPage({ params }: { params: { id: string
   ]);
 
   if (!account) notFound();
+  if (!canEditAccount(await getCurrentUser(), account)) return <NoPermission backHref={`/accounts/${account.id}`} />;
 
   return (
     <div>

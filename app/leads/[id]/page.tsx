@@ -2,6 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import LeadActions from "@/components/LeadActions";
+import { getCurrentUser, canEditLead } from "@/lib/permissions";
+
+export const dynamic = "force-dynamic";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -25,6 +28,7 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
   ]);
 
   if (!lead) return notFound();
+  const canEdit = canEditLead(await getCurrentUser(), lead);
 
   return (
     <div style={{ maxWidth: 700, margin: "40px auto", padding: "0 16px" }}>
@@ -48,12 +52,18 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
       <Row label="Created" value={new Date(lead.createdAt).toLocaleDateString()} />
 
       <div style={{ marginTop: 24 }}>
-        <LeadActions
-          leadId={lead.id}
-          status={lead.status}
-          linkedAccountId={lead.linkedAccountId}
-          accounts={accounts}
-        />
+        {canEdit ? (
+          <LeadActions
+            leadId={lead.id}
+            status={lead.status}
+            linkedAccountId={lead.linkedAccountId}
+            accounts={accounts}
+          />
+        ) : (
+          <p style={{ fontSize: 14, color: "#666" }}>
+            Only {lead.transferredToUser.name} or an Admin can update this lead.
+          </p>
+        )}
       </div>
     </div>
   );

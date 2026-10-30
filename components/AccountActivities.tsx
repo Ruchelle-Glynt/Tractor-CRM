@@ -54,6 +54,16 @@ export default function AccountActivities({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Most recent gift to the chosen contact (or to the account, if no contact
+  // chosen) - shown while logging a new gift so nobody doubles up.
+  const lastGift =
+    type === "GIFT"
+      ? activities.find((a) => a.type === "GIFT" && (contactId ? a.contact?.id === contactId : true))
+      : undefined;
+  const lastGiftDays = lastGift
+    ? Math.floor((Date.now() - new Date(lastGift.activityDate).getTime()) / (24 * 60 * 60 * 1000))
+    : null;
+
   function reset() {
     setType("MEETING");
     setActivityDate(todayIso());
@@ -151,6 +161,27 @@ export default function AccountActivities({
               </select>
             </label>
           </div>
+          {type === "GIFT" && (
+            <p
+              className="rounded px-3 py-2 text-sm"
+              style={
+                lastGift && lastGiftDays !== null && lastGiftDays < 90
+                  ? { backgroundColor: "#FFE4EC", color: "#BE0044" }
+                  : { backgroundColor: "#F3F4F6", color: "#374151" }
+              }
+            >
+              {lastGift
+                ? `Last gift ${contactId ? "to this person" : "on this account"}: ${new Date(lastGift.activityDate).toLocaleDateString("en-ZA", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    timeZone: "UTC",
+                  })}${lastGift.description ? ` (${lastGift.description})` : ""}${
+                    lastGiftDays !== null && lastGiftDays < 90 ? ` - only ${lastGiftDays} days ago` : ""
+                  }`
+                : `No gifts logged ${contactId ? "for this person" : "on this account"} yet.`}
+            </p>
+          )}
           <label className="block">
             <span className="font-medium">What happened</span>
             <textarea
@@ -220,7 +251,7 @@ export default function AccountActivities({
                   </p>
                   {a.description && <p className="mt-0.5 whitespace-pre-wrap text-gray-700">{a.description}</p>}
                   <p className="mt-1 text-xs text-gray-400">
-                    {new Date(a.activityDate).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}{" "}
+                    {new Date(a.activityDate).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}{" "}
                     · {a.owner.name}
                   </p>
                 </div>

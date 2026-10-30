@@ -2,7 +2,9 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Avatar } from "@/components/Badge";
+import { Avatar, TierBadge } from "@/components/Badge";
+import HealthPill from "@/components/HealthPill";
+import { healthFor, lastActivityByAccount } from "@/lib/health";
 import { activityLabel, formatRand } from "@/lib/activity";
 import {
   saToday,
@@ -95,6 +97,24 @@ export default async function DashboardPage() {
     }),
     prisma.user.findMany({ select: { id: true, name: true } }),
   ]);
+
+  // Going cold: Tier 1 and 2 accounts with nothing logged in 60+ days (or
+  // never). Sales see their own accounts; everyone else sees the whole book.
+  const keyAccounts = await prisma.account.findMany({
+    where: {
+      tier: { in: ["TIER_1", "TIER_2"] },
+      ...(user?.role === "SALES" && user.id ? { salesExecutiveId: user.id } : {}),
+    },
+    select: { id: true, name: true, tier: true, salesExecutive: { select: { name: true } } },
+  });
+  const lastActivity = await lastActivityByAccount(keyAccounts.map((a) => a.id));
+  const goingCold = keyAccounts
+    .map((a) => ({ ...a, health: healthFor(lastActivity.get(a.id)) }))
+    .filter((a) => a.health.status !== "ACTIVE")
+    .sort(
+      (a, b) =>
+        a.tier.localeCompare(b.tier) || (b.health.daysSince ?? 100000) - (a.health.daysSince ?? 100000) || a.name.localeCompare(b.name)
+    );
 
   // Birthdays in the next 30 days, soonest first.
   const birthdays = birthdayContacts
@@ -338,6 +358,43 @@ export default async function DashboardPage() {
                   </li>
                 ))}
               </ul>
+            )}
+          </Card>
+
+          {/* Going cold */}
+          <Card
+            title="Going cold"
+            subtitle={`Tier 1 & 2 ${user?.role === "SALES" ? "accounts of yours " : ""}with nothing logged in 60+ days`}
+            action={
+              <Link href="/accounts?health=COLD" className="text-sm font-medium text-navy hover:underline">
+                All →
+              </Link>
+            }
+          >
+            {goingCold.length === 0 ? (
+              <Empty>Every key account has had attention in the last 60 days. Nice work.</Empty>
+            ) : (
+              <>
+                <ul className="divide-y divide-gray-100">
+                  {goingCold.slice(0, 6).map((a) => (
+                    <li key={a.id} className="flex items-center justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        <Link href={`/accounts/${a.id}`} className="block truncate text-sm font-medium hover:underline">
+                          {a.name}
+                        </Link>
+                        <p className="flex items-center gap-2 text-xs text-gray-400">
+                          <TierBadge tier={a.tier} />
+                          {a.salesExecutive.name.split(" ")[0]}
+                        </p>
+                      </div>
+                      <HealthPill health={a.health} />
+                    </li>
+                  ))}
+                </ul>
+                {goingCold.length > 6 && (
+                  <p className="mt-3 text-xs text-gray-400">+ {goingCold.length - 6} more key accounts need attention</p>
+                )}
+              </>
             )}
           </Card>
 

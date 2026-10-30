@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { TypeBadge, TierBadge } from "@/components/Badge";
 import AccountActivities from "@/components/AccountActivities";
+import HealthPill from "@/components/HealthPill";
+import AccountSpend from "@/components/AccountSpend";
+import { healthFor } from "@/lib/health";
+import { getCurrentUser, canEditAccount } from "@/lib/permissions";
 
 // See app/accounts/page.tsx for why this is needed - without it Next.js may
 // statically cache this page and hide edits until the next deploy.
@@ -29,14 +31,14 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
         },
         orderBy: { activityDate: "desc" },
       },
-      growthMetrics: { orderBy: { period: "desc" }, take: 12 },
+      growthMetrics: { orderBy: { period: "desc" }, take: 36 },
     },
   });
 
   if (!account) notFound();
 
-  const session = await getServerSession(authOptions);
-  const currentUser = session?.user as { id?: string; role?: string } | undefined;
+  const currentUser = await getCurrentUser();
+  const canEdit = canEditAccount(currentUser, account);
 
   // Prisma returns money as Decimal objects, which can't be handed to a
   // client component - convert to plain numbers and date strings first.
@@ -62,10 +64,11 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-bold text-navy">{account.name}</h1>
             <TypeBadge type={account.type} />
             <TierBadge tier={account.tier} />
+            <HealthPill health={healthFor(account.activities[0]?.activityDate)} />
           </div>
           <p className="mt-1 text-sm text-gray-500">
             {account.type === "CLIENT" && account.category
@@ -78,14 +81,16 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
             <p className="mt-1 text-sm text-gray-500">Industries across managed clients: {clientIndustries.join(", ")}</p>
           )}
         </div>
-        <div className="flex gap-2">
-          <Link href={`/accounts/${account.id}/edit`} className="rounded border border-navy px-4 py-2 text-sm text-navy">
-            Edit account
-          </Link>
-          <Link href="/contacts/new" className="rounded bg-navy px-4 py-2 text-sm text-white">
-            + Add contact
-          </Link>
-        </div>
+        {canEdit && (
+          <div className="flex gap-2">
+            <Link href={`/accounts/${account.id}/edit`} className="rounded border border-navy px-4 py-2 text-sm text-navy">
+              Edit account
+            </Link>
+            <Link href={`/contacts/new?accountId=${account.id}`} className="rounded bg-navy px-4 py-2 text-sm text-white">
+              + Add contact
+            </Link>
+          </div>
+        )}
       </div>
 
       <dl className="mt-6 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
@@ -197,32 +202,17 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
         )}
       </section>
 
-      {/* Growth tracking (Priority 7) - most recent months */}
-      <section className="mt-10 mb-4">
-        <h2 className="text-lg font-semibold text-navy">Recent spend</h2>
-        {account.growthMetrics.length === 0 ? (
-          <p className="mt-2 text-sm text-gray-400">No growth data yet.</p>
-        ) : (
-          <table className="mt-3 w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-gray-300 text-gray-500">
-                <th className="py-2">Period</th>
-                <th className="py-2">Channel</th>
-                <th className="py-2">Spend</th>
-              </tr>
-            </thead>
-            <tbody>
-              {account.growthMetrics.map((metric) => (
-                <tr key={metric.id} className="border-b border-gray-100">
-                  <td className="py-2">{new Date(metric.period).toLocaleDateString()}</td>
-                  <td className="py-2">{metric.channelType ?? "Unspecified"}</td>
-                  <td className="py-2">R{Number(metric.spendAmount).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+      {/* Growth tracking (Priority 7) - monthly spend and holding size */}
+      <AccountSpend
+        accountId={account.id}
+        canEdit={canEdit}
+        initialItems={account.growthMetrics.map((m) => ({
+          id: m.id,
+          period: m.period.toISOString(),
+          spendAmount: Number(m.spendAmount),
+          holdingSize: m.holdingSize === null ? null : Number(m.holdingSize),
+        }))}
+      />
     </div>
   );
 }

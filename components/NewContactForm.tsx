@@ -2,7 +2,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 type Option = { id: string; label: string };
-export default function NewContactForm({ accounts }: { accounts: Option[] }) {
+export default function NewContactForm({
+  accounts,
+  defaultAccountId = "",
+}: {
+  accounts: Option[];
+  defaultAccountId?: string;
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -51,7 +57,7 @@ export default function NewContactForm({ accounts }: { accounts: Option[] }) {
         <select
           name="accountId"
           required
-          defaultValue=""
+          defaultValue={accounts.some((a) => a.id === defaultAccountId) ? defaultAccountId : ""}
           onChange={(e) => {
             if (e.target.value === "__ADD_NEW__") {
               router.push("/accounts/new");

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { activityLabel } from "@/lib/activity";
+import { getCurrentUser, canEditAccount } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
   });
 
   if (!contact) notFound();
+  const canEdit = canEditAccount(await getCurrentUser(), contact.account);
 
   return (
     <div>
@@ -27,9 +29,11 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
             </Link>
           </p>
         </div>
-        <Link href={`/contacts/${contact.id}/edit`} className="rounded border border-navy px-4 py-2 text-sm text-navy">
-          Edit contact
-        </Link>
+        {canEdit && (
+          <Link href={`/contacts/${contact.id}/edit`} className="rounded border border-navy px-4 py-2 text-sm text-navy">
+            Edit contact
+          </Link>
+        )}
       </div>
 
       <dl className="mt-6 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">

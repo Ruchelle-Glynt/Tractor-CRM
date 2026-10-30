@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser, canEditLead, NO_PERMISSION } from "@/lib/permissions";
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -28,6 +29,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
+
+  const existing = await prisma.lead.findUnique({ where: { id: params.id }, select: { transferredToUserId: true } });
+  if (!existing) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+  if (!canEditLead(await getCurrentUser(), existing)) {
+    return NextResponse.json({ error: NO_PERMISSION }, { status: 403 });
   }
 
   const body = await request.json();

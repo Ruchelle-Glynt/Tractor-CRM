@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser, canEditAccount, NO_PERMISSION } from "@/lib/permissions";
 
 // GET /api/contacts - list all contacts with their account name
 export async function GET() {
@@ -27,6 +28,12 @@ export async function POST(request: Request) {
     if (!body[field]) {
       return NextResponse.json({ error: `Missing required field: ${field}` }, { status: 400 });
     }
+  }
+
+  const account = await prisma.account.findUnique({ where: { id: body.accountId }, select: { salesExecutiveId: true } });
+  if (!account) return NextResponse.json({ error: "Account not found" }, { status: 404 });
+  if (!canEditAccount(await getCurrentUser(), account)) {
+    return NextResponse.json({ error: NO_PERMISSION }, { status: 403 });
   }
 
   const contact = await prisma.contact.create({
