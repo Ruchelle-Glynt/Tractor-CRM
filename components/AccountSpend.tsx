@@ -176,12 +176,12 @@ export default function AccountSpend({
           <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
             <div>
               <p className="text-gray-500">Last 12 months</p>
-              <p className="font-heading text-2xl font-black">{formatRand(Math.round(last12)) || "R0"}</p>
+              <p className="font-heading text-xl font-bold">{formatRand(Math.round(last12)) || "R0"}</p>
             </div>
             <div>
               <p className="text-gray-500">vs previous 12 months</p>
               <p
-                className="font-heading text-2xl font-black"
+                className="font-heading text-xl font-bold"
                 style={{ color: change === null ? "#9CA3AF" : change >= 0 ? "#04A57A" : "#FF005B" }}
               >
                 {change === null ? "-" : `${change >= 0 ? "▲" : "▼"} ${Math.abs(change).toFixed(0)}%`}
@@ -190,7 +190,7 @@ export default function AccountSpend({
             {latestHolding && (
               <div>
                 <p className="text-gray-500">Latest holding size</p>
-                <p className="font-heading text-2xl font-black">{latestHolding.holdingSize !== null ? formatNumber(latestHolding.holdingSize) : ""}</p>
+                <p className="font-heading text-xl font-bold">{latestHolding.holdingSize !== null ? formatNumber(latestHolding.holdingSize) : ""}</p>
               </div>
             )}
           </div>

@@ -103,7 +103,7 @@ export default async function GiftsPage({ searchParams }: { searchParams: { year
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Upcoming birthdays */}
         <section className="rounded-xl border border-gray-200 bg-white p-6 lg:col-span-2">
-          <h2 className="text-lg font-bold">Birthdays in the next 30 days</h2>
+          <h2 className="text-base font-semibold">Birthdays in the next 30 days</h2>
           <p className="text-sm text-gray-500">And whether they&apos;ve had a gift from us this year</p>
           {upcoming.length === 0 ? (
             <p className="mt-4 rounded-lg bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">No birthdays coming up.</p>
@@ -148,7 +148,7 @@ export default async function GiftsPage({ searchParams }: { searchParams: { year
 
         {/* Spend by account */}
         <section className="rounded-xl border border-gray-200 bg-white p-6 lg:col-span-3">
-          <h2 className="text-lg font-bold">Spend by account</h2>
+          <h2 className="text-base font-semibold">Spend by account</h2>
           <p className="text-sm text-gray-500">Gifts logged in {year}, biggest spend first</p>
           {accountRows.length === 0 ? (
             <p className="mt-4 rounded-lg bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">No gifts logged in {year}.</p>
@@ -176,7 +176,7 @@ export default async function GiftsPage({ searchParams }: { searchParams: { year
 
       {/* All gifts */}
       <section className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="text-lg font-bold">Every gift in {year}</h2>
+        <h2 className="text-base font-semibold">Every gift in {year}</h2>
         {gifts.length === 0 ? (
           <p className="mt-4 rounded-lg bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">Nothing logged yet.</p>
         ) : (
@@ -229,7 +229,7 @@ function Tile({ color, label, value }: { color: string; label: string; value: st
     <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5">
       <span className="absolute inset-x-0 top-0 h-1.5" style={{ backgroundColor: color }} />
       <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className="mt-2 font-heading text-3xl font-black">{value}</p>
+      <p className="mt-2 font-heading text-2xl font-bold">{value}</p>
     </div>
   );
 }

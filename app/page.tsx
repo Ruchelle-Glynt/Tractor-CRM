@@ -173,25 +173,25 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* ---------- Header ---------- */}
-      <section className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <section className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
             {today.toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}
           </p>
-          <h1 className="mt-2 text-4xl font-black leading-[1.05] tracking-tight sm:text-6xl">
+          <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight sm:text-[2.6rem]">
             {greeting()},{" "}
             <span className="bg-[linear-gradient(transparent_62%,#F7D849_62%)]">{firstName}.</span>
           </h1>
-          <p className="mt-4 text-lg text-gray-600">{headline.charAt(0).toUpperCase() + headline.slice(1)}</p>
+          <p className="mt-3 text-[15px] text-gray-600">{headline.charAt(0).toUpperCase() + headline.slice(1)}</p>
         </div>
-        <div className="flex flex-wrap gap-2 text-sm font-semibold lg:justify-end">
-          <Link href="/leads/new" className="rounded-md bg-navy px-4 py-2.5 text-white hover:bg-gray-800">
+        <div className="flex shrink-0 gap-2 text-[13px] font-semibold">
+          <Link href="/leads/new" className="whitespace-nowrap rounded-md bg-navy px-3.5 py-2 text-white hover:bg-gray-800">
             + New lead
           </Link>
-          <Link href="/accounts/new" className="rounded-md border-2 border-navy px-4 py-2 hover:bg-navy hover:text-white">
+          <Link href="/accounts/new" className="whitespace-nowrap rounded-md border border-navy px-3.5 py-2 hover:bg-navy hover:text-white">
             + Account
           </Link>
-          <Link href="/contacts/new" className="rounded-md border-2 border-navy px-4 py-2 hover:bg-navy hover:text-white">
+          <Link href="/contacts/new" className="whitespace-nowrap rounded-md border border-navy px-3.5 py-2 hover:bg-navy hover:text-white">
             + Contact
           </Link>
         </div>
@@ -502,7 +502,7 @@ function StatTile({
     >
       <span className="absolute inset-x-0 top-0 h-1.5" style={{ backgroundColor: color }} />
       <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className="mt-2 font-heading text-4xl font-black">{value.toLocaleString("en-ZA")}</p>
+      <p className="mt-2 font-heading text-3xl font-bold">{value.toLocaleString("en-ZA")}</p>
       <p className="mt-1 text-xs font-medium" style={{ color: noteColor ?? "#6B7280" }}>
         {note}
       </p>
@@ -527,10 +527,10 @@ function Card({
     <section id={id} className="scroll-mt-6 rounded-xl border border-gray-200 bg-white p-6">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold">{title}</h2>
+          <h2 className="text-base font-semibold">{title}</h2>
           {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
         </div>
-        {action}
+        {action && <div className="shrink-0 whitespace-nowrap">{action}</div>}
       </div>
       {children}
     </section>
@@ -551,7 +551,7 @@ function CalendarChip({ date, color }: { date: Date; color: string }) {
       >
         {date.toLocaleDateString("en-ZA", { month: "short", timeZone: "UTC" })}
       </div>
-      <div className="py-1 font-heading text-lg font-black leading-none">{date.getUTCDate()}</div>
+      <div className="py-1 font-heading text-base font-bold leading-none">{date.getUTCDate()}</div>
     </div>
   );
 }

@@ -2,8 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* A slightly smaller base size gives the whole app a more refined feel -
+   every Tailwind size (text, spacing, icons) scales down with it. */
+html {
+  font-size: 15px;
+}
+
 body {
-  @apply bg-gray-50 text-gray-900;
+  @apply bg-gray-50 text-gray-900 antialiased;
 }
 
 h1, h2, h3, h4, h5, h6 {

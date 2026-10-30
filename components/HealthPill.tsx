@@ -6,7 +6,7 @@ export default function HealthPill({ health }: { health: Health }) {
     <span
       title={health.lastActivity ? `Last activity ${health.lastActivity.toLocaleDateString("en-ZA", { timeZone: "UTC" })}` : undefined}
       style={{ backgroundColor: style.bg, color: style.text }}
-      className="inline-block whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold"
+      className="inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
     >
       {healthLabel(health)}
     </span>

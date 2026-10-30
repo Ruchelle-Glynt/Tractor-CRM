@@ -15,7 +15,7 @@ export function TypeBadge({ type }: { type: string }) {
   return (
     <span
       style={{ backgroundColor: color }}
-      className="inline-block whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold text-white"
+      className="inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold text-white"
     >
       {type === "AGENCY" ? "Agency" : "Client"}
     </span>
@@ -34,7 +34,7 @@ export function TierBadge({ tier }: { tier: string }) {
   return (
     <span
       style={{ backgroundColor: info.bg, color: info.text }}
-      className="inline-block whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold"
+      className="inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
     >
       {info.label}
     </span>
@@ -47,7 +47,7 @@ export function Avatar({ name }: { name: string }) {
   return (
     <span
       style={{ backgroundColor: color }}
-      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
     >
       {initial}
     </span>

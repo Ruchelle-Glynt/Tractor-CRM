@@ -130,15 +130,15 @@ export default async function AgenciesPage({ searchParams }: { searchParams: { s
               <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
                 <div className="rounded-lg bg-gray-50 py-2">
                   <dt className="text-[11px] text-gray-500">Clients</dt>
-                  <dd className="font-heading text-xl font-black">{a.clients.length}</dd>
+                  <dd className="font-heading text-lg font-bold">{a.clients.length}</dd>
                 </div>
                 <div className="rounded-lg bg-gray-50 py-2">
                   <dt className="text-[11px] text-gray-500">Activity, 90 days</dt>
-                  <dd className="font-heading text-xl font-black">{a.activity}</dd>
+                  <dd className="font-heading text-lg font-bold">{a.activity}</dd>
                 </div>
                 <div className="rounded-lg bg-gray-50 py-2">
                   <dt className="text-[11px] text-gray-500">Client spend, 12m</dt>
-                  <dd className="font-heading text-xl font-black">{a.clientSpend > 0 ? formatRandShort(a.clientSpend) : "-"}</dd>
+                  <dd className="font-heading text-lg font-bold">{a.clientSpend > 0 ? formatRandShort(a.clientSpend) : "-"}</dd>
                 </div>
               </dl>
 

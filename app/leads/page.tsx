@@ -127,7 +127,7 @@ export default async function LeadsPage({
       </section>
 
       <section className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="text-lg font-bold">Where leads come from</h2>
+        <h2 className="text-base font-semibold">Where leads come from</h2>
         <ul className="mt-4 space-y-3">
           {bySource.map((s) => (
             <li key={s.value} className="grid grid-cols-[90px_1fr_auto] items-center gap-3 text-sm sm:grid-cols-[110px_1fr_200px]">
@@ -230,7 +230,7 @@ function Tile({ color, label, value, note }: { color: string; label: string; val
     <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5">
       <span className="absolute inset-x-0 top-0 h-1.5" style={{ backgroundColor: color }} />
       <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className="mt-2 font-heading text-3xl font-black">{value}</p>
+      <p className="mt-2 font-heading text-2xl font-bold">{value}</p>
       <p className="mt-1 text-xs text-gray-500">{note}</p>
     </div>
   );
