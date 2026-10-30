@@ -29,6 +29,7 @@ export function formatRand(value: number | null | undefined) {
 
 // Short form for tight spaces: R950, R12k, R1.2m
 export function formatRandShort(value: number): string {
+  if (value >= 1_000_000_000) return `R${(value / 1_000_000_000).toFixed(value >= 10_000_000_000 ? 0 : 1).replace(/\.0$/, "")}bn`;
   if (value >= 1_000_000) return `R${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1).replace(/\.0$/, "")}m`;
   if (value >= 10_000) return `R${Math.round(value / 1_000)}k`;
   return `R${formatNumber(Math.round(value), 0)}`;

@@ -5,6 +5,8 @@ import { TypeBadge, TierBadge } from "@/components/Badge";
 import AccountActivities from "@/components/AccountActivities";
 import HealthPill from "@/components/HealthPill";
 import AccountSpend from "@/components/AccountSpend";
+import MarketSpend from "@/components/MarketSpend";
+import { NIELSEN_YEAR } from "@/lib/nielsen";
 import { healthFor } from "@/lib/health";
 import { getCurrentUser, canEditAccount } from "@/lib/permissions";
 
@@ -201,6 +203,16 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
           </table>
         )}
       </section>
+
+      {/* Market spend (Nielsen) and share of wallet - clients only */}
+      {account.type === "CLIENT" && (
+        <MarketSpend
+          accountName={account.name}
+          tractorSpend={account.growthMetrics
+            .filter((m) => m.period.getUTCFullYear() === NIELSEN_YEAR)
+            .reduce((s, m) => s + Number(m.spendAmount), 0)}
+        />
+      )}
 
       {/* Growth tracking (Priority 7) - monthly spend and holding size */}
       <AccountSpend

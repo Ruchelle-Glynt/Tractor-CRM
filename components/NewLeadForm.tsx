@@ -9,16 +9,18 @@ type AccountOption = { id: string; name: string };
 export default function NewLeadForm({
   users,
   accounts,
+  defaultCompany = "",
 }: {
   users: UserOption[];
   accounts: AccountOption[];
+  defaultCompany?: string;
 }) {
   const router = useRouter();
-  const [source, setSource] = useState("WEBSITE");
+  const [source, setSource] = useState(defaultCompany ? "OTHER" : "WEBSITE");
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
-  const [companyName, setCompanyName] = useState("");
+  const [companyName, setCompanyName] = useState(defaultCompany);
   const [linkedAccountId, setLinkedAccountId] = useState("");
   const [transferredToUserId, setTransferredToUserId] = useState(users[0]?.id ?? "");
   const [error, setError] = useState("");

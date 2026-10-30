@@ -10,6 +10,7 @@ export const NAV_LINKS = [
   { href: "/activities", label: "Activity" },
   { href: "/gifts", label: "Gifts" },
   { href: "/leads", label: "Leads" },
+  { href: "/market", label: "Market" },
   { href: "/settings", label: "Settings" },
 ];
 
