@@ -62,6 +62,11 @@ export default async function AccountsListPage({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-navy">Accounts</h1>
         <div className="flex gap-2">
+          {user?.role === "ADMIN" && (
+            <Link href="/admin/import" className="rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:border-navy">
+              Import sales report
+            </Link>
+          )}
           <a href="/api/accounts/export" className="rounded border border-navy px-4 py-2 text-sm text-navy">
             Download CSV
           </a>

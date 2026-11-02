@@ -8,6 +8,8 @@
 // account can match a Nielsen advertiser (the parent company) instead.
 // Names that need a manual link go in MANUAL_MATCHES below.
 import raw from "@/lib/data/nielsen-2025.json";
+import { normalizeName } from "@/lib/names";
+export { normalizeName };
 
 type Raw = {
   source: string;
@@ -54,22 +56,6 @@ export function spendFor(row: { byMedia: number[]; total: number }, media: numbe
   return media === null ? row.total : row.byMedia[media] ?? 0;
 }
 
-const STOP = new Set([
-  "PTY", "LTD", "LIMITED", "GROUP", "HOLDINGS", "HOLDING", "SOC", "CO", "CORPORATION", "CORP", "INC", "PLC",
-  "SOUTH", "AFRICA", "SA", "THE", "RSA", "COM",
-]);
-
-export function normalizeName(name: string): string {
-  return name
-    .toUpperCase()
-    .replace(/&/g, " AND ")
-    .replace(/['’`]/g, "")
-    .replace(/\.COM\b/g, "")
-    .replace(/[^A-Z0-9]+/g, " ")
-    .split(" ")
-    .filter((w) => w && !STOP.has(w))
-    .join(" ");
-}
 
 const brandKeys = BRANDS.map((b) => normalizeName(b.brand));
 const advertiserKeys = data.advertisers.map((a) => normalizeName(a));

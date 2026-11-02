@@ -4,6 +4,8 @@ import { TierBadge } from "@/components/Badge";
 import HealthPill from "@/components/HealthPill";
 import { healthFor } from "@/lib/health";
 import { formatRandShort } from "@/lib/activity";
+import { OFFICES } from "@/lib/importPlan";
+import { companyKey } from "@/lib/names";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +19,9 @@ const TIER_COLORS: Record<string, string> = {
 
 // Agency view: every media agency with the clients it manages, rolled up -
 // activity across the agency and its clients, client spend, tiers, industries.
-export default async function AgenciesPage({ searchParams }: { searchParams: { sort?: string } }) {
+export default async function AgenciesPage({ searchParams }: { searchParams: { sort?: string; office?: string } }) {
   const sort = ["clients", "activity", "spend", "name"].includes(searchParams.sort ?? "") ? searchParams.sort! : "clients";
+  const office = (OFFICES as readonly string[]).includes(searchParams.office ?? "") ? searchParams.office! : "";
   const since90 = new Date(Date.now() - 90 * DAY_MS);
   const now = new Date();
   const since12m = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1));
@@ -69,6 +72,11 @@ export default async function AgenciesPage({ searchParams }: { searchParams: { s
     };
   });
 
+  // Agencies set up per office ("Omnicom Media Group SA JHB") carry it in the name
+  const officeOf = (name: string) => OFFICES.find((o) => companyKey(name).endsWith(o)) ?? "";
+  const officeCounts = OFFICES.map((o) => ({ o, n: rows.filter((r) => officeOf(r.name) === o).length })).filter((x) => x.n > 0);
+  if (office) rows.splice(0, rows.length, ...rows.filter((r) => officeOf(r.name) === office));
+
   rows.sort((a, b) =>
     sort === "name"
       ? a.name.localeCompare(b.name)
@@ -100,7 +108,7 @@ export default async function AgenciesPage({ searchParams }: { searchParams: { s
           ].map((s) => (
             <Link
               key={s.key}
-              href={`/agencies?sort=${s.key}`}
+              href={`/agencies?sort=${s.key}${office ? `&office=${office}` : ""}`}
               className={`rounded-md px-3 py-1.5 ${sort === s.key ? "bg-navy text-white" : "border border-gray-300 text-gray-700 hover:border-navy"}`}
             >
               {s.label}
@@ -108,6 +116,26 @@ export default async function AgenciesPage({ searchParams }: { searchParams: { s
           ))}
         </div>
       </div>
+
+      {officeCounts.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1 text-sm">
+          <Link
+            href={`/agencies?sort=${sort}`}
+            className={`rounded-md px-3 py-1.5 ${!office ? "bg-navy text-white" : "border border-gray-300 text-gray-700 hover:border-navy"}`}
+          >
+            All offices
+          </Link>
+          {officeCounts.map(({ o, n }) => (
+            <Link
+              key={o}
+              href={`/agencies?sort=${sort}&office=${o}`}
+              className={`rounded-md px-3 py-1.5 ${office === o ? "bg-navy text-white" : "border border-gray-300 text-gray-700 hover:border-navy"}`}
+            >
+              {o} ({n})
+            </Link>
+          ))}
+        </div>
+      )}
 
       {rows.length === 0 ? (
         <p className="mt-6 text-sm text-gray-400">No agencies yet.</p>
