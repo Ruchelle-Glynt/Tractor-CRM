@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import EditAccountForm from "@/components/EditAccountForm";
 import NoPermission from "@/components/NoPermission";
+import DeleteAccount from "@/components/DeleteAccount";
 import { getCurrentUser, canEditAccount } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,11 @@ export default async function EditAccountPage({ params }: { params: { id: string
   const [account, categories, salesUsers, agencies] = await Promise.all([
     prisma.account.findUnique({
       where: { id: params.id },
-      include: { category: true, subcategory: true },
+      include: {
+        category: true,
+        subcategory: true,
+        _count: { select: { contacts: true, activities: true, growthMetrics: true, clients: true } },
+      },
     }),
     prisma.category.findMany({ orderBy: [{ mainCategory: "asc" }, { subcategory: "asc" }] }),
     prisma.user.findMany({ where: { role: "SALES" }, orderBy: { name: "asc" } }),
@@ -18,17 +23,26 @@ export default async function EditAccountPage({ params }: { params: { id: string
   ]);
 
   if (!account) notFound();
-  if (!canEditAccount(await getCurrentUser(), account)) return <NoPermission backHref={`/accounts/${account.id}`} />;
+  const user = await getCurrentUser();
+  if (!canEditAccount(user, account)) return <NoPermission backHref={`/accounts/${account.id}`} />;
+  const { _count, ...accountFields } = account;
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-navy">Edit account</h1>
       <EditAccountForm
-        account={account}
+        account={accountFields}
         categories={categories}
         users={salesUsers.map((u) => ({ id: u.id, label: u.name }))}
         agencies={agencies.filter((a) => a.id !== account.id).map((a) => ({ id: a.id, label: a.name }))}
       />
+      {user?.role === "ADMIN" && (
+        <DeleteAccount
+          accountId={account.id}
+          accountName={account.name}
+          counts={{ contacts: _count.contacts, activities: _count.activities, spendMonths: _count.growthMetrics, clients: _count.clients }}
+        />
+      )}
     </div>
   );
 }

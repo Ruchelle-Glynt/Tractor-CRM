@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { Avatar, TypeBadge, TierBadge } from "@/components/Badge";
 import HealthPill from "@/components/HealthPill";
+import BulkDeleteBar from "@/components/BulkDeleteBar";
 import { healthFor, lastActivityByAccount } from "@/lib/health";
 import { getCurrentUser } from "@/lib/permissions";
 
@@ -55,6 +56,7 @@ export default async function AccountsListPage({
     .map((a) => ({ ...a, health: healthFor(lastActivity.get(a.id)) }))
     .filter((a) => !health || a.health.status === health);
 
+  const isAdmin = user?.role === "ADMIN";
   const filtered = Boolean(q || type || tier || exec || health);
 
   return (
@@ -125,10 +127,13 @@ export default async function AccountsListPage({
         {rows.length} {rows.length === 1 ? "account" : "accounts"}
       </p>
 
+      {isAdmin && <BulkDeleteBar />}
+
       <div className="overflow-x-auto">
         <table className="mt-2 w-full text-left text-sm">
           <thead>
             <tr className="border-b border-gray-300 text-gray-500">
+              {isAdmin && <th className="w-8 py-2" />}
               <th className="py-2 pr-3">Name</th>
               <th className="py-2 pr-3">Type</th>
               <th className="py-2 pr-3">Tier</th>
@@ -139,6 +144,11 @@ export default async function AccountsListPage({
           <tbody>
             {rows.map((account) => (
               <tr key={account.id} className="border-b border-gray-100 hover:bg-white">
+                {isAdmin && (
+                  <td className="py-3">
+                    <input type="checkbox" data-bulk value={account.id} aria-label={`Select ${account.name}`} className="h-4 w-4" />
+                  </td>
+                )}
                 <td className="py-3 pr-3">
                   <Link
                     href={`/accounts/${account.id}`}
@@ -162,7 +172,7 @@ export default async function AccountsListPage({
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-6 text-center text-gray-400">
+                <td colSpan={isAdmin ? 6 : 5} className="py-6 text-center text-gray-400">
                   {filtered ? "No accounts match these filters." : "No accounts yet."}
                 </td>
               </tr>

@@ -55,3 +55,18 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
   return NextResponse.json(account);
 }
+
+// DELETE /api/accounts/:id - Admins only. Removes the account with its
+// contacts, activity, contracts and spend history. Clients that went through
+// it (if it's an agency) and linked leads are kept, just unlinked.
+export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (user.role !== "ADMIN") return NextResponse.json({ error: "Only Admins can delete accounts." }, { status: 403 });
+
+  const existing = await prisma.account.findUnique({ where: { id: params.id }, select: { id: true } });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  await prisma.account.delete({ where: { id: params.id } });
+  return NextResponse.json({ ok: true });
+}
