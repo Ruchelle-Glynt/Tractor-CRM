@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/Badge";
+import PhotoCropper from "@/components/PhotoCropper";
 
 type Profile = {
   name: string;
@@ -16,32 +17,6 @@ type Profile = {
 const OFFICES = ["JHB", "CPT", "DBN", "GQ"];
 const OFFICE_NAMES: Record<string, string> = { JHB: "Johannesburg", CPT: "Cape Town", DBN: "Durban", GQ: "Gqeberha" };
 
-// Crop to a centred square and shrink to 320px JPEG in the browser, so photos
-// upload quickly and stay small (~20-40 KB) whatever the phone camera produced.
-async function toSquareJpeg(file: File): Promise<string> {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const i = new Image();
-      i.onload = () => resolve(i);
-      i.onerror = () => reject(new Error("unreadable"));
-      i.src = url;
-    });
-    const side = Math.min(img.naturalWidth, img.naturalHeight);
-    const out = 320;
-    const canvas = document.createElement("canvas");
-    canvas.width = out;
-    canvas.height = out;
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, out, out);
-    ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, out, out);
-    return canvas.toDataURL("image/jpeg", 0.85);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
-
 export default function ProfileForm({ profile }: { profile: Profile }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -55,6 +30,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
 
   async function patch(body: Record<string, unknown>) {
     const res = await fetch("/api/profile", {
@@ -67,7 +43,8 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
     return data;
   }
 
-  async function choosePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+  // Picking a file opens the cropper; saving there uploads the result.
+  function choosePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -75,17 +52,21 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
       setMsg({ ok: false, text: "Please choose a photo (JPG or PNG)." });
       return;
     }
-    setPhotoBusy(true);
     setMsg(null);
+    setCropFile(file);
+  }
+
+  async function uploadCropped(dataUrl: string) {
+    setCropFile(null);
+    setPhotoBusy(true);
+    setPhoto(dataUrl);
     try {
-      const dataUrl = await toSquareJpeg(file);
-      setPhoto(dataUrl);
       await patch({ photo: dataUrl });
       setMsg({ ok: true, text: "Photo updated." });
       router.refresh();
     } catch (err) {
       setPhoto(profile.photo);
-      setMsg({ ok: false, text: err instanceof Error && err.message !== "unreadable" ? err.message : "That photo couldn't be read - try another one." });
+      setMsg({ ok: false, text: (err as Error).message });
     } finally {
       setPhotoBusy(false);
     }
@@ -144,8 +125,9 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
               </button>
             )}
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={choosePhoto} />
+            {cropFile && <PhotoCropper file={cropFile} onCancel={() => setCropFile(null)} onDone={uploadCropped} />}
           </div>
-          <p className="mt-1.5 text-xs text-gray-400">A clear head-and-shoulders photo works best. It&apos;s cropped to a square.</p>
+          <p className="mt-1.5 text-xs text-gray-400">A clear head-and-shoulders photo works best. You can drag and zoom to position it.</p>
         </div>
       </div>
 
