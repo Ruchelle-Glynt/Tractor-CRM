@@ -9,6 +9,7 @@
 // account or lead.
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export type CurrentUser = { id: string; name: string; role: "ADMIN" | "SALES" | "MARKETING" };
 
@@ -16,7 +17,11 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   const session = await getServerSession(authOptions);
   const u = session?.user as { id?: string; name?: string | null; role?: string } | undefined;
   if (!u?.id) return null;
-  return { id: u.id, name: u.name ?? "", role: (u.role as CurrentUser["role"]) ?? "SALES" };
+  // Read name, role and status fresh from the database, so a role change or
+  // deactivation takes effect straight away rather than at next sign-in.
+  const db = await prisma.user.findUnique({ where: { id: u.id }, select: { name: true, role: true, active: true } });
+  if (!db || !db.active) return null;
+  return { id: u.id, name: db.name, role: db.role };
 }
 
 export function canEditAll(user: CurrentUser | null): boolean {

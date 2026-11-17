@@ -19,7 +19,7 @@ export async function GET() {
   if (!session) return new Response("Unauthorized", { status: 401 });
 
   const accounts = await prisma.account.findMany({
-    include: { category: true, subcategory: true, salesExecutive: true, mainContact: true, parentAgency: true },
+    include: { category: true, subcategory: true, salesExecutive: { select: { name: true } }, mainContact: true, parentAgency: true },
     orderBy: { name: "asc" },
   });
 

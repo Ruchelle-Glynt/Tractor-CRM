@@ -24,7 +24,7 @@ export const authOptions: NextAuthOptions = {
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
-        if (!user) return null;
+        if (!user || !user.active) return null; // deactivated users can't sign in
 
         const passwordValid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!passwordValid) return null;

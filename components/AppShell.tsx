@@ -14,7 +14,7 @@ import {
   GiftIcon,
   TargetIcon,
   ChartIcon,
-  CogIcon,
+  UserIcon,
   LogoutIcon,
   PlusIcon,
 } from "@/components/Icons";
@@ -35,7 +35,14 @@ const FULL_WIDTH = ["/accounts", "/contacts"];
 
 // The app frame: a black icon rail on the left (like Nimble's), a top bar with
 // search and quick-add, and the page. The login page gets none of it.
-export default function AppShell({ userName, children }: { userName: string | null; children: React.ReactNode }) {
+export default function AppShell({
+  user,
+  children,
+}: {
+  user: { name: string; role: string; photo: string | null } | null;
+  children: React.ReactNode;
+}) {
+  const userName = user?.name ?? null;
   const pathname = usePathname() ?? "/";
   if (pathname.startsWith("/login")) return <>{children}</>;
 
@@ -61,14 +68,25 @@ export default function AppShell({ userName, children }: { userName: string | nu
           ))}
         </nav>
         <div className="flex flex-col items-center gap-1">
+          {user?.role === "ADMIN" && (
+            <Link
+              href="/admin/users"
+              className={`flex w-[56px] flex-col items-center gap-1 rounded-lg py-2 text-[10px] font-medium ${
+                isActive("/admin/users") ? "bg-yellow text-black" : "text-gray-400 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <UsersIcon />
+              Users
+            </Link>
+          )}
           <Link
-            href="/settings"
+            href="/profile"
             className={`flex w-[56px] flex-col items-center gap-1 rounded-lg py-2 text-[10px] font-medium ${
-              isActive("/settings") ? "bg-yellow text-black" : "text-gray-400 hover:bg-white/10 hover:text-white"
+              isActive("/profile") ? "bg-yellow text-black" : "text-gray-400 hover:bg-white/10 hover:text-white"
             }`}
           >
-            <CogIcon />
-            Settings
+            <UserIcon />
+            Profile
           </Link>
           <Link
             href="/api/auth/signout"
@@ -102,14 +120,14 @@ export default function AppShell({ userName, children }: { userName: string | nu
                 New lead
               </Link>
               {userName && (
-                <Link href="/settings" className="ml-2 hidden items-center gap-2 text-[13px] font-medium text-white sm:flex" title="Your settings">
+                <Link href="/profile" className="ml-2 hidden items-center gap-2 text-[13px] font-medium text-white sm:flex" title="Your profile">
                   <span className="hidden xl:inline">{userName}</span>
-                  <Avatar name={userName} />
+                  <Avatar name={userName} src={user?.photo} size="h-7 w-7 text-xs" />
                 </Link>
               )}
               <div className="lg:hidden">
                 <MobileMenu
-                  links={[...NAV.map(({ href, label }) => ({ href, label })), { href: "/settings", label: "Settings" }]}
+                  links={[...NAV.map(({ href, label }) => ({ href, label })), { href: "/profile", label: "Profile" }, ...(user?.role === "ADMIN" ? [{ href: "/admin/users", label: "Users" }] : [])]}
                 />
               </div>
             </div>

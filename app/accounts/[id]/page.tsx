@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { TypeBadge, TierBadge } from "@/components/Badge";
+import { TypeBadge, TierBadge, Avatar } from "@/components/Badge";
 import AccountActivities from "@/components/AccountActivities";
+import AccountComments from "@/components/AccountComments";
+import { photoSrc } from "@/lib/photo";
 import HealthPill from "@/components/HealthPill";
 import AccountSpend from "@/components/AccountSpend";
 import MarketSpend from "@/components/MarketSpend";
@@ -20,12 +22,12 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
     include: {
       category: true,
       subcategory: true,
-      salesExecutive: true,
+      salesExecutive: { select: { id: true, name: true, photoUpdatedAt: true } },
       mainContact: true,
       parentAgency: true,
       clients: { include: { category: true } },
       contacts: { orderBy: { firstName: "asc" } },
-      contracts: { orderBy: { endDate: "asc" } },
+      comments: { include: { author: { select: { name: true } } }, orderBy: { createdAt: "desc" } },
       activities: {
         include: {
           owner: { select: { name: true } },
@@ -98,7 +100,10 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
       <dl className="mt-6 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
         <div>
           <dt className="text-gray-500">Sales executive</dt>
-          <dd className="font-medium">{account.salesExecutive.name}</dd>
+          <dd className="flex items-center gap-2 font-medium">
+            <Avatar name={account.salesExecutive.name} src={photoSrc(account.salesExecutive)} />
+            {account.salesExecutive.name}
+          </dd>
         </div>
         <div>
           <dt className="text-gray-500">Fiscal year</dt>
@@ -173,36 +178,19 @@ export default async function AccountDetailPage({ params }: { params: { id: stri
         </section>
       )}
 
-      {/* Contracts (spec 4.4a) - manual entry, trade and non-trade alike */}
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold text-navy">Contracts</h2>
-        {account.contracts.length === 0 ? (
-          <p className="mt-2 text-sm text-gray-400">No contracts recorded yet.</p>
-        ) : (
-          <table className="mt-3 w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-gray-300 text-gray-500">
-                <th className="py-2">Deal type</th>
-                <th className="py-2">Ends</th>
-                <th className="py-2">Status</th>
-                <th className="py-2">ROFR</th>
-              </tr>
-            </thead>
-            <tbody>
-              {account.contracts.map((contract) => (
-                <tr key={contract.id} className="border-b border-gray-100">
-                  <td className="py-2">{contract.dealType.replaceAll("_", " ")}</td>
-                  <td className="py-2">{new Date(contract.endDate).toLocaleDateString()}</td>
-                  <td className="py-2">{contract.status}</td>
-                  <td className="py-2">
-                    {contract.hasFirstRightOfRefusal ? contract.rofrStatus ?? "PENDING" : "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+      {/* Comment log (4.4b) - replaces the old structured Contracts section */}
+      <AccountComments
+        accountId={account.id}
+        currentUserId={currentUser?.id ?? ""}
+        isAdmin={currentUser?.role === "ADMIN"}
+        initialComments={account.comments.map((c) => ({
+          id: c.id,
+          body: c.body,
+          createdAt: c.createdAt.toISOString(),
+          authorId: c.authorId,
+          author: c.author,
+        }))}
+      />
 
       {/* Market spend (Nielsen) and share of wallet - clients only */}
       {account.type === "CLIENT" && (

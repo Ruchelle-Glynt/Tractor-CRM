@@ -149,6 +149,7 @@ model Account {
   growthMetrics    AccountGrowthMetric[]
   marketBenchmarks MarketBenchmark[]
   leads            Lead[]
+  comments         Comment[]
 }
 // ---------------------------------------------------------------------------
 // 4.3 Contact - Priority 1, 2. An individual person at an Account.
@@ -223,6 +224,21 @@ model Contract {
   notes     String?
   createdAt DateTime @default(now())
 }
+// ---------------------------------------------------------------------------
+// 4.4b Comment - a simple, timestamped free-text log per Account. Used for
+// things like holding expirations and iconic site bookings coming to an end,
+// without forcing them into rigid structured fields. Text only for now.
+// ---------------------------------------------------------------------------
+model Comment {
+  id        String   @id @default(uuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("CommentAuthor", fields: [authorId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+}
+
 // ---------------------------------------------------------------------------
 // 4.5 AccountGrowthMetric - Priority 7. channelType left blank in Phase 1
 // (see spec Section 4.5) until Classic/Digital/Programmatic can be split.
@@ -304,8 +320,19 @@ model User {
   passwordHash        String
   role                UserRole
   emailSenderOverride String? // future per-salesperson sender address (spec 5.4)
+
+  // Profile (set by each person on their Profile page)
+  title          String? // job title, e.g. "Senior Sales Executive"
+  phone          String?
+  office         String? // "JHB", "CPT", ...
+  photo          String? // small square JPEG, stored as a data URL
+  photoUpdatedAt DateTime? // changes whenever the photo does, so browsers fetch the new one
+
+  // Admins can deactivate leavers: they can't sign in, but their history stays.
+  active Boolean @default(true)
   createdAt DateTime @default(now())
   salesAccounts    Account[]  @relation("SalesExecutiveAccounts")
   activities       Activity[] @relation("ActivityOwner")
   leadsTransferred Lead[]     @relation("LeadTransferredTo")
+  commentsAuthored Comment[]  @relation("CommentAuthor")
 }

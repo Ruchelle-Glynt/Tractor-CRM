@@ -41,17 +41,33 @@ export function TierBadge({ tier }: { tier: string }) {
   );
 }
 
-// Coloured initial. "square" (bigger, rounded corners) is used for companies
-// in list tables; the round one for people. Yellow gets black text.
-export function Avatar({ name, square = false }: { name: string; square?: boolean }) {
+// A person's photo, or a coloured initial if there isn't one. "square"
+// (bigger, rounded corners) is used for companies in list tables.
+// "size" overrides the default size, e.g. "h-20 w-20 text-2xl" on the profile.
+export function Avatar({
+  name,
+  square = false,
+  src,
+  size,
+}: {
+  name: string;
+  square?: boolean;
+  src?: string | null;
+  size?: string;
+}) {
   const initial = name.trim().charAt(0).toUpperCase() || "?";
   const color = hashColor(name);
+  const dims = size ?? (square ? "h-8 w-8 text-[13px]" : "h-6 w-6 text-[11px]");
+  const shape = square ? "rounded-md" : "rounded-full";
+  if (src) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt={name} title={name} className={`${dims} ${shape} shrink-0 object-cover`} />;
+  }
   return (
     <span
       style={{ backgroundColor: color, color: color === "#F7D849" ? "#000" : "#fff" }}
-      className={`inline-flex shrink-0 items-center justify-center font-semibold ${
-        square ? "h-8 w-8 rounded-md text-[13px]" : "h-6 w-6 rounded-full text-[11px]"
-      }`}
+      className={`inline-flex shrink-0 items-center justify-center font-semibold ${dims} ${shape}`}
+      title={name}
     >
       {initial}
     </span>

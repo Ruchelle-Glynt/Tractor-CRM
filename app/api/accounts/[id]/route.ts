@@ -14,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     include: {
       category: true,
       subcategory: true,
-      salesExecutive: true,
+      salesExecutive: { select: { id: true, name: true } },
       mainContact: true,
       parentAgency: true,
       clients: true,

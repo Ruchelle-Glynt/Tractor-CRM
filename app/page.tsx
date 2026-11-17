@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Avatar, TierBadge } from "@/components/Badge";
+import { photoSrc } from "@/lib/photo";
 import HealthPill from "@/components/HealthPill";
 import { healthFor, lastActivityByAccount } from "@/lib/health";
 import { activityLabel, formatRand } from "@/lib/activity";
@@ -95,7 +96,7 @@ export default async function DashboardPage() {
       select: { id: true, name: true, fiscalYearStart: true },
       orderBy: { name: "asc" },
     }),
-    prisma.user.findMany({ select: { id: true, name: true } }),
+    prisma.user.findMany({ select: { id: true, name: true, photoUpdatedAt: true } }),
   ]);
 
   // Going cold: Tier 1 and 2 accounts with nothing logged in 60+ days (or
@@ -126,6 +127,7 @@ export default async function DashboardPage() {
 
   // Leaderboard: activities logged this month, per person.
   const userNames = new Map(users.map((u) => [u.id, u.name]));
+  const userPhotos = new Map(users.map((u) => [u.id, photoSrc(u)]));
   const leaderboard = leaderboardRows
     .map((r) => ({ id: r.ownerId, name: userNames.get(r.ownerId) ?? "Unknown", count: r._count._all }))
     .sort((a, b) => b.count - a.count)
@@ -332,7 +334,7 @@ export default async function DashboardPage() {
                 {leaderboard.map((p, i) => (
                   <li key={p.id} className="flex items-center gap-3">
                     <span className="w-4 text-right text-sm font-bold text-gray-400">{i + 1}</span>
-                    <Avatar name={p.name} />
+                    <Avatar name={p.name} src={userPhotos.get(p.id)} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="truncate text-sm font-medium">

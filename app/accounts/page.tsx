@@ -8,6 +8,7 @@ import InlineSelect from "@/components/InlineSelect";
 import { BuildingIcon, BriefcaseIcon, ListIcon, UserIcon, SnowIcon, ClockIcon, PlusIcon, DownloadIcon, UploadIcon, ChevronRightIcon } from "@/components/Icons";
 import { healthFor, lastActivityByAccount } from "@/lib/health";
 import { getCurrentUser, canEditAccount } from "@/lib/permissions";
+import { photoSrc } from "@/lib/photo";
 
 // Always fetch fresh from the database - otherwise Next.js caches this page
 // at deploy time and edits don't show until the next deploy.
@@ -44,7 +45,7 @@ export default async function AccountsListPage({ searchParams }: { searchParams:
         type: true,
         tier: true,
         salesExecutiveId: true,
-        salesExecutive: { select: { name: true } },
+        salesExecutive: { select: { id: true, name: true, photoUpdatedAt: true } },
         category: { select: { mainCategory: true } },
         parentAgency: { select: { name: true } },
         _count: { select: { clients: true, contacts: true } },
@@ -248,7 +249,7 @@ export default async function AccountsListPage({ searchParams }: { searchParams:
                       <td className="py-2 pr-3">
                         {isAdmin ? (
                           <span className="flex items-center gap-2">
-                            <Avatar name={a.salesExecutive.name} />
+                            <Avatar name={a.salesExecutive.name} src={photoSrc(a.salesExecutive)} />
                             <InlineSelect
                               endpoint={`/api/accounts/${a.id}`}
                               field="salesExecutiveId"
@@ -261,7 +262,7 @@ export default async function AccountsListPage({ searchParams }: { searchParams:
                           </span>
                         ) : (
                           <span className="flex items-center gap-2 whitespace-nowrap text-gray-700">
-                            <Avatar name={a.salesExecutive.name} />
+                            <Avatar name={a.salesExecutive.name} src={photoSrc(a.salesExecutive)} />
                             {a.salesExecutive.name}
                           </span>
                         )}

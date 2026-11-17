@@ -5,6 +5,7 @@ import ListPanel, { type PanelSection } from "@/components/ListPanel";
 import InlineSelect from "@/components/InlineSelect";
 import { ListIcon, UserIcon, StarIcon, CakeIcon, ClockIcon, PlusIcon, DownloadIcon, ChevronRightIcon, BriefcaseIcon, BuildingIcon } from "@/components/Icons";
 import { getCurrentUser, canEditAccount } from "@/lib/permissions";
+import { photoSrc } from "@/lib/photo";
 import { saToday, nextBirthday, shortDate } from "@/lib/dashboard";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +43,7 @@ export default async function ContactsListPage({ searchParams }: { searchParams:
       decisionRole: true,
       birthday: true,
       createdAt: true,
-      account: { select: { id: true, name: true, type: true, salesExecutiveId: true, salesExecutive: { select: { name: true } } } },
+      account: { select: { id: true, name: true, type: true, salesExecutiveId: true, salesExecutive: { select: { id: true, name: true, photoUpdatedAt: true } } } },
     },
     orderBy: { firstName: "asc" },
   });
@@ -213,7 +214,7 @@ export default async function ContactsListPage({ searchParams }: { searchParams:
                       </td>
                       <td className="py-2 pr-5">
                         <span className="flex items-center gap-2 whitespace-nowrap text-gray-700">
-                          <Avatar name={c.account.salesExecutive.name} />
+                          <Avatar name={c.account.salesExecutive.name} src={photoSrc(c.account.salesExecutive)} />
                           {c.account.salesExecutive.name}
                         </span>
                       </td>
