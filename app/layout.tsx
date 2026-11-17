@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Montserrat, Poppins } from "next/font/google";
 import "./globals.css";
-import NavBar from "@/components/NavBar";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import AppShell from "@/components/AppShell";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -20,12 +22,12 @@ export const metadata: Metadata = {
   description: "Client intelligence tool for Tractor Outdoor",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession(authOptions);
   return (
     <html lang="en" className={`${montserrat.variable} ${poppins.variable}`}>
       <body className="font-sans">
-        <NavBar />
-        <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+        <AppShell userName={session?.user?.name ?? null}>{children}</AppShell>
       </body>
     </html>
   );

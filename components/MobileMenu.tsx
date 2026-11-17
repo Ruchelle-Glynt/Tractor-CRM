@@ -24,7 +24,7 @@ export default function MobileMenu({ links }: { links: { href: string; label: st
         </svg>
       </button>
       {open && (
-        <nav className="absolute left-0 right-0 top-[64px] z-40 border-t border-white/10 bg-navy px-6 pb-4 shadow-lg">
+        <nav className="absolute left-0 right-0 top-full z-40 mt-2 rounded-xl bg-navy px-6 pb-4 shadow-lg">
           {[...links, { href: "/api/auth/signout", label: "Sign out" }].map((l) => (
             <Link
               key={l.href}

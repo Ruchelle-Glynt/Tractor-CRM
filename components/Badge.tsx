@@ -41,13 +41,17 @@ export function TierBadge({ tier }: { tier: string }) {
   );
 }
 
-export function Avatar({ name }: { name: string }) {
+// Coloured initial. "square" (bigger, rounded corners) is used for companies
+// in list tables; the round one for people. Yellow gets black text.
+export function Avatar({ name, square = false }: { name: string; square?: boolean }) {
   const initial = name.trim().charAt(0).toUpperCase() || "?";
   const color = hashColor(name);
   return (
     <span
-      style={{ backgroundColor: color }}
-      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+      style={{ backgroundColor: color, color: color === "#F7D849" ? "#000" : "#fff" }}
+      className={`inline-flex shrink-0 items-center justify-center font-semibold ${
+        square ? "h-8 w-8 rounded-md text-[13px]" : "h-6 w-6 rounded-full text-[11px]"
+      }`}
     >
       {initial}
     </span>
