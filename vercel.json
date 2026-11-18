@@ -1,0 +1,3 @@
+{
+  "crons": [{ "path": "/api/cron/outlook-sync", "schedule": "0 1 * * *" }]
+}

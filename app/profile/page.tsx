@@ -5,12 +5,14 @@ import { getCurrentUser } from "@/lib/permissions";
 import { photoSrc } from "@/lib/photo";
 import ProfileForm from "@/components/ProfileForm";
 import PasswordForm from "@/components/PasswordForm";
+import OutlookCard from "@/components/OutlookCard";
+import { outlookConfigured } from "@/lib/outlook";
 import { UsersIcon, ChevronRightIcon } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
 
 // Your profile: photo, contact details and password.
-export default async function ProfilePage() {
+export default async function ProfilePage({ searchParams }: { searchParams: { outlook?: string; msg?: string } }) {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   const user = await prisma.user.findUnique({
@@ -18,6 +20,17 @@ export default async function ProfilePage() {
     select: { id: true, name: true, email: true, role: true, title: true, phone: true, office: true, photoUpdatedAt: true },
   });
   if (!user) redirect("/login");
+  const outlook = await prisma.outlookConnection.findUnique({
+    where: { userId: user.id },
+    select: { msEmail: true, lastSyncAt: true, lastError: true, lastLogged: true },
+  });
+  // Message after coming back from Microsoft
+  const notice =
+    searchParams.outlook === "connected"
+      ? { kind: "ok" as const, text: `Outlook connected.${searchParams.msg ? ` ${searchParams.msg} activities added from the last 30 days.` : ""}` }
+      : searchParams.outlook === "error"
+      ? { kind: "error" as const, text: `Couldn't connect Outlook: ${searchParams.msg ?? "please try again."}` }
+      : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -31,6 +44,13 @@ export default async function ProfilePage() {
           phone: user.phone,
           office: user.office,
           photo: photoSrc(user),
+        }}
+      />
+      <OutlookCard
+        status={{
+          configured: outlookConfigured(),
+          connection: outlook ? { ...outlook, lastSyncAt: outlook.lastSyncAt?.toISOString() ?? null } : null,
+          notice,
         }}
       />
       <PasswordForm />

@@ -22,6 +22,7 @@ const TYPE_COLORS: Record<string, string> = {
   EVENT: "#F7D849",
   CAMPAIGN_DRIVE: "#000000",
   OTHER: "#9CA3AF",
+  EMAIL: "#0078D4",
 };
 
 function todayIso() {

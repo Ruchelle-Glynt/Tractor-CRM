@@ -39,6 +39,7 @@ enum ActivityType {
   CAMPAIGN_DRIVE
   CALL
   MEETING
+  EMAIL // logged automatically from Outlook
   OTHER
 }
 enum DealType {
@@ -335,4 +336,23 @@ model User {
   activities       Activity[] @relation("ActivityOwner")
   leadsTransferred Lead[]     @relation("LeadTransferredTo")
   commentsAuthored Comment[]  @relation("CommentAuthor")
+  outlook          OutlookConnection?
+}
+
+// ---------------------------------------------------------------------------
+// OutlookConnection - one per person who has connected their Microsoft 365
+// mailbox. Only a refresh token is kept (encrypted with NEXTAUTH_SECRET); the
+// sync uses it to read calendar events and emails with CRM contacts and logs
+// them as Activities.
+// ---------------------------------------------------------------------------
+model OutlookConnection {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  msEmail      String // the Microsoft account that was connected
+  refreshToken String // encrypted
+  lastSyncAt   DateTime?
+  lastError    String?
+  lastLogged   Int       @default(0) // activities added by the last sync
+  createdAt    DateTime  @default(now())
 }

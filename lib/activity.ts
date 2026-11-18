@@ -2,6 +2,7 @@
 export const ACTIVITY_TYPES = [
   { value: "MEETING", label: "Meeting" },
   { value: "CALL", label: "Call" },
+  { value: "EMAIL", label: "Email" },
   { value: "GIFT", label: "Gift" },
   { value: "EVENT", label: "Event" },
   { value: "CAMPAIGN_DRIVE", label: "Campaign drive" },
